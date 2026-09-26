@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Extraction stage (docs/05, docs/07): OPEN item — exact model/runtime
     # pending a local feasibility check (docs/14-open-questions.md, item 1).
     # When unset, the extraction pipeline uses the documented degradation
-    # path (rules + NER only, no local LLM stage).
+    # baseline (regex + supplied-mention matching, no statistical NER/LLM).
     local_llm_model_path: Path | None = None
     llm_extraction_enabled: bool = False
 

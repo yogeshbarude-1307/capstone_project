@@ -28,6 +28,16 @@ Step 4 happening *after* and *independently* of step 3 is what makes the later f
 
 ## Datasets (`PROPOSED` sizing, `CONFIRMED` purpose split)
 
+**Implemented Milestone 2 default:** 40 synthetic account entities, 104 weekly
+periods, 4,160 demand rows and 675 notes (seed 42). This is a smaller mechanics
+dataset than the proposed sizing below. D2 now has a 40-note provisional dev
+challenge starter (see docs/15); human gold and D4/D5/D6 remain unbuilt. Notes,
+IDs, oracle rows and demand reproduce for the same configuration/seed; source
+IDs use a deterministic identity derived from configuration, ordinal, text,
+and authored time without consuming either causal random stream. D1 oracle
+metadata describes latent generator intent and is not independently annotated
+text-level truth, especially for vague time phrases and partial observations.
+
 | ID | Purpose | Content | Ground truth |
 |---|---|---|---|
 | **D0** | Baseline tabular forecast benchmark | Synthetic demand/shipment history + existing structured covariates, per entity/period | Actual (generator-produced) target series |
@@ -41,6 +51,12 @@ Step 4 happening *after* and *independently* of step 3 is what makes the later f
 Sizing (`PROPOSED`, adjust once pipeline runtime is known): D1 ~5,000–20,000 notes; D2 ~800–1,500 notes (≥100 per major `signal_type` where feasible, ≥20% explicit `NO_SIGNAL`, ≥15% explicit challenge cases); D4/D5 a few hundred notes each; D6 ~50–100 fixed notes.
 
 ## Annotation schema for D2 (`PROPOSED`)
+
+**Implemented contract:** `evaluation/annotations.py`, exported to
+`docs/annotations/d2_dataset.schema.json`. It records `annotator_ids`, label
+origin, adjudication state/adjudicator, ambiguity, abstention reason, selected
+scoring fields and field-support spans. The starter's annotations are assistant
+drafts; they cannot claim human adjudication. See docs/15 for the full workflow.
 
 Mirrors the signal schema in `03-data-model.md` plus: `annotator_id`, `adjudication_state` (single/double-annotated, agreed/disagreed/resolved), `ambiguity_flag`, and an explicit **abstention reason** field so "correctly declined to extract" is itself a scoreable outcome. At least 20–30% of D2 should be double-annotated and adjudicated before treating the ontology as stable.
 

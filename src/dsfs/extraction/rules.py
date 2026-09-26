@@ -89,7 +89,7 @@ def detect_certainty(text: str) -> BusinessCertainty:
         if phrase in lower:
             return certainty
     for keyword, certainty in _CERTAINTY_KEYWORD_FALLBACK:
-        if keyword in lower:
+        if re.search(r"\b" + re.escape(keyword) + r"\b", lower):
             return certainty
     return BusinessCertainty.UNKNOWN
 
@@ -114,22 +114,34 @@ def detect_magnitude(text: str) -> tuple[float | None, str | None, MagnitudeBasi
     return float(match.group(1)), "%", MagnitudeBasis.PERCENT
 
 
-_TIME_PHRASES: list[tuple[str, int, int, str]] = [
-    ("in the next couple of weeks", 14, 14, "week"),
-    ("next month", 30, 30, "month"),
-    ("next quarter", 90, 90, "quarter"),
-    ("later this year", 150, 90, "unknown"),
-    ("next year", 300, 180, "year"),
-]
+def is_reversal(text: str) -> bool:
+    """Only explicit reversal language; ordinary negation is not a reversal."""
+    return bool(re.search(
+        r"\bcancelled\b|\bcanceled\b|\bno longer happening\b|\breversed their previous decision\b",
+        text, re.IGNORECASE,
+    ))
+
+
+def _month_start(authored_at: datetime, month_offset: int) -> datetime:
+    year, month = divmod(authored_at.year * 12 + authored_at.month - 1 + month_offset, 12)
+    return authored_at.replace(year=year, month=month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
 def detect_time_window(
     text: str, authored_at: datetime
 ) -> tuple[datetime | None, datetime | None, str | None, str | None]:
     lower = text.lower()
-    for phrase, start_offset_days, duration_days, granularity in _TIME_PHRASES:
-        if phrase in lower:
-            start = authored_at + timedelta(days=start_offset_days)
-            end = start + timedelta(days=duration_days)
-            return start, end, phrase, granularity
+    # Calendar intervals are half-open [start, end), preserving the source timezone.
+    if "next month" in lower:
+        return _month_start(authored_at, 1), _month_start(authored_at, 2), "next month", "month"
+    if "next quarter" in lower:
+        offset = 3 - (authored_at.month - 1) % 3
+        return _month_start(authored_at, offset), _month_start(authored_at, offset + 3), "next quarter", "quarter"
+    if "next year" in lower:
+        offset = 13 - authored_at.month
+        return _month_start(authored_at, offset), _month_start(authored_at, offset + 12), "next year", "year"
+    if "later this year" in lower:
+        return authored_at, _month_start(authored_at, 13 - authored_at.month), "later this year", "unknown"
+    if "in the next couple of weeks" in lower:
+        return authored_at, authored_at + timedelta(weeks=2), "in the next couple of weeks", "week"
     return None, None, None, None

@@ -68,7 +68,10 @@ class TestHardCase3FutureEvent:
         assert sig.effective_start is not None
         # Must be computed relative to authored_at (Jan 2026), not "today".
         assert sig.effective_start.year == 2026
-        assert sig.effective_start.month in (1, 2)
+        assert sig.effective_start.month == 2
+        assert sig.effective_start.day == 1
+        assert sig.effective_end.month == 3
+        assert sig.effective_end.day == 1
         assert sig.effective_start > ev.authored_at
 
     def test_different_authored_at_shifts_the_same_time_phrase(self, known_entities):
@@ -96,11 +99,9 @@ class TestHardCase4ReversalSupersession:
     silently confirm an increase (i.e. must not remain confidently
     ACTIVE/INCREASE about the original claim). Cross-signal
     supersedes_signal_id linking against a prior ledger entry is a
-    reconciliation step owned by a later pipeline stage (docs/03-data-
-    model.md 'Duplicate/conflict engine'; Business Problem doc 'Duplicate,
-    conflicting, and evolving signals'), not the single-note extractor —
-    that is out of Milestone 3 scope by design and is exercised again once
-    the reconciliation stage exists."""
+    reconciliation step, not the single-note extractor. The history-aware
+    behavior is exercised separately in test_reconciliation.py; this case
+    has no prior history and must remain REVIEW."""
 
     def test_cancellation_is_recognized_as_negated_and_not_a_false_increase(self, known_entities):
         ev = make_evidence("EV-4", "Previous expansion plan has been cancelled.")

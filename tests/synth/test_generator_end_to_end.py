@@ -70,9 +70,9 @@ def test_same_seed_is_fully_reproducible():
 
     ids_1 = [n.source_id for n in d1.d1_notes]
     ids_2 = [n.source_id for n in d2.d1_notes]
-    # source_id uses uuid4 (non-deterministic by design, since it's just an
-    # identifier, not business content) -- confirm counts match instead.
-    assert len(ids_1) == len(ids_2)
+    assert ids_1 == ids_2
+    assert d1.d1_notes == d2.d1_notes
+    assert d1.d1_ground_truth == d2.d1_ground_truth
 
 
 def test_different_seeds_produce_different_demand():

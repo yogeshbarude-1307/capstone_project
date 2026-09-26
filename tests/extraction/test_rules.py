@@ -7,6 +7,7 @@ from dsfs.extraction.rules import (
 )
 from dsfs.models.signal_record import BusinessCertainty, Conditionality, Direction, MagnitudeBasis
 from datetime import datetime, timedelta
+import pytest
 
 
 def test_conflicting_direction_cues_are_flagged_not_guessed():
@@ -63,10 +64,25 @@ def test_time_window_is_relative_to_authored_at_not_wall_clock():
     start, end, phrase, granularity = detect_time_window("increase orders next quarter.", authored_at)
     assert phrase == "next quarter"
     assert granularity == "quarter"
-    assert start == authored_at + timedelta(days=90)
-    assert end == start + timedelta(days=90)
+    assert start == datetime(2024, 4, 1)
+    assert end == datetime(2024, 7, 1)
 
 
 def test_time_window_absent_returns_all_none():
     start, end, phrase, granularity = detect_time_window("increase orders.", datetime(2024, 1, 1))
     assert (start, end, phrase, granularity) == (None, None, None, None)
+
+
+@pytest.mark.parametrize("authored,phrase,start,end", [
+    (datetime(2024, 1, 31, 23), "next month", datetime(2024, 2, 1), datetime(2024, 3, 1)),
+    (datetime(2024, 12, 31), "next month", datetime(2025, 1, 1), datetime(2025, 2, 1)),
+    (datetime(2024, 12, 31), "next quarter", datetime(2025, 1, 1), datetime(2025, 4, 1)),
+    (datetime(2024, 2, 29), "next year", datetime(2025, 1, 1), datetime(2026, 1, 1)),
+])
+def test_calendar_boundaries(authored, phrase, start, end):
+    actual_start, actual_end, _, _ = detect_time_window(phrase, authored)
+    assert (actual_start, actual_end) == (start, end)
+
+
+def test_certainty_does_not_match_inside_a_word():
+    assert detect_certainty("William discussed orders.") == BusinessCertainty.UNKNOWN

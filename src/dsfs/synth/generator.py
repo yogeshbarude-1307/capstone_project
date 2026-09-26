@@ -24,6 +24,7 @@ from pathlib import Path
 import pandas as pd
 
 from dsfs.config import Settings, get_settings
+from dsfs.contracts import validate_record
 from dsfs.models.source_evidence import SourceEvidence
 from dsfs.synth.config import GeneratorConfig
 from dsfs.synth.demand import realize_demand
@@ -80,6 +81,9 @@ def generate_dataset(config: GeneratorConfig) -> GeneratedDataset:
 
 
 def write_dataset(dataset: GeneratedDataset, raw_dir: Path) -> dict[str, Path]:
+    # Fail before writing any artifact if evidence violates the wire contract.
+    for note in dataset.d1_notes:
+        validate_record("source_evidence", note.model_dump(mode="json"))
     raw_dir.mkdir(parents=True, exist_ok=True)
 
     d0_path = raw_dir / "d0_tabular_demand.parquet"

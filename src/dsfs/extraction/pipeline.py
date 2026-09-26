@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,6 +22,7 @@ from dsfs.extraction.extractor import (
     extract_signal,
 )
 from dsfs.extraction.ledger import append_to_ledger
+from dsfs.extraction.reconciliation import reconcile_reversal
 from dsfs.models.signal_record import SignalRecord
 from dsfs.models.source_evidence import SourceEvidence
 from dsfs.synth.config import GeneratorConfig
@@ -33,6 +34,9 @@ class QuarantinedRecord:
     source_id: str
     error: str
     stage: str  # "construct" (pydantic model construction) or "contract" (JSON Schema)
+    source_evidence: dict
+    extraction_run_id: str
+    rejected_record: dict | None = None
 
 
 @dataclass
@@ -58,11 +62,16 @@ def run_extraction(
     extraction_run_id: str | None = None,
     extractor_version: str = DEFAULT_EXTRACTOR_VERSION,
     extraction_config_version: str = DEFAULT_EXTRACTION_CONFIG_VERSION,
+    extracted_at: datetime | None = None,
 ) -> ExtractionRunResult:
     run_id = extraction_run_id or new_extraction_run_id()
     result = ExtractionRunResult(extraction_run_id=run_id)
+    run_time = extracted_at or datetime.now(timezone.utc)
+    sources = {note.source_id: note for note in notes}
+    if len(sources) != len(notes):
+        raise ValueError("Source IDs must be unique within an extraction snapshot")
 
-    for evidence in notes:
+    for evidence in sorted(notes, key=lambda n: (n.available_at, n.source_id)):
         try:
             record = extract_signal(
                 evidence,
@@ -70,10 +79,12 @@ def run_extraction(
                 extraction_run_id=run_id,
                 extractor_version=extractor_version,
                 extraction_config_version=extraction_config_version,
+                extracted_at=run_time,
             )
+            record = reconcile_reversal(record, evidence, result.accepted, sources)
         except ValidationError as exc:
             result.quarantined.append(
-                QuarantinedRecord(source_id=evidence.source_id, error=str(exc), stage="construct")
+                QuarantinedRecord(evidence.source_id, str(exc), "construct", evidence.model_dump(mode="json"), run_id)
             )
             continue
 
@@ -82,7 +93,7 @@ def run_extraction(
             validate_record("signal_record", dumped)
         except ContractValidationError as exc:
             result.quarantined.append(
-                QuarantinedRecord(source_id=evidence.source_id, error=str(exc), stage="contract")
+                QuarantinedRecord(evidence.source_id, str(exc), "contract", evidence.model_dump(mode="json"), run_id, dumped)
             )
             continue
 
@@ -99,6 +110,11 @@ def run_and_persist(
 ) -> ExtractionRunResult:
     result = run_extraction(notes, known_entities, **kwargs)
     append_to_ledger(result.accepted, ledger_path)
+    if result.quarantined:
+        rejected_path = ledger_path.with_name(ledger_path.stem + "_rejected.jsonl")
+        with rejected_path.open("a", encoding="utf-8") as f:
+            for rejected in result.quarantined:
+                f.write(json.dumps(asdict(rejected)) + "\n")
     return result
 
 
@@ -109,6 +125,8 @@ def _load_notes(path: Path) -> list[SourceEvidence]:
 
 def main(settings: Settings | None = None) -> None:
     settings = settings or get_settings()
+    if settings.llm_extraction_enabled:
+        raise NotImplementedError("Local LLM extraction is not implemented; disable it to use the explicit rules baseline.")
     settings.ensure_dirs()
 
     d1_notes_path = settings.data_raw_dir / "d1_notes.jsonl"

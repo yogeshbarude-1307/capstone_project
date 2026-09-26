@@ -1,0 +1,493 @@
+{
+  "$defs": {
+    "AnnotatedCase": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/SourceEvidence"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "template_group": {
+          "title": "Template Group",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "train",
+            "dev",
+            "test"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "sample": {
+          "enum": [
+            "challenge",
+            "natural_prevalence"
+          ],
+          "title": "Sample",
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "label_origin": {
+          "enum": [
+            "assistant_draft",
+            "human"
+          ],
+          "title": "Label Origin",
+          "type": "string"
+        },
+        "annotator_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Annotator Ids",
+          "type": "array"
+        },
+        "adjudication_state": {
+          "enum": [
+            "draft",
+            "single",
+            "agreed",
+            "resolved"
+          ],
+          "title": "Adjudication State",
+          "type": "string"
+        },
+        "adjudicator_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Adjudicator Id"
+        },
+        "ambiguity_flag": {
+          "default": false,
+          "title": "Ambiguity Flag",
+          "type": "boolean"
+        },
+        "expected": {
+          "$ref": "#/$defs/ExpectedSignal"
+        },
+        "scored_fields": {
+          "items": {
+            "enum": [
+              "signal_type",
+              "direction",
+              "impact_channel",
+              "business_certainty",
+              "conditionality",
+              "condition_text",
+              "negated",
+              "magnitude_value",
+              "magnitude_unit",
+              "effective_start",
+              "effective_end",
+              "forecast_key",
+              "supersedes_source_id"
+            ],
+            "type": "string"
+          },
+          "title": "Scored Fields",
+          "type": "array"
+        },
+        "field_evidence": {
+          "additionalProperties": {
+            "items": {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            "type": "array"
+          },
+          "propertyNames": {
+            "enum": [
+              "signal_type",
+              "direction",
+              "impact_channel",
+              "business_certainty",
+              "conditionality",
+              "condition_text",
+              "negated",
+              "magnitude_value",
+              "magnitude_unit",
+              "effective_start",
+              "effective_end",
+              "forecast_key",
+              "supersedes_source_id"
+            ]
+          },
+          "title": "Field Evidence",
+          "type": "object"
+        }
+      },
+      "required": [
+        "evidence",
+        "scenario_id",
+        "template_group",
+        "split",
+        "sample",
+        "label_origin",
+        "annotator_ids",
+        "adjudication_state",
+        "expected"
+      ],
+      "title": "AnnotatedCase",
+      "type": "object"
+    },
+    "BusinessCertainty": {
+      "enum": [
+        "ASSERTED",
+        "EXPECTED",
+        "LIKELY",
+        "POSSIBLE",
+        "UNKNOWN"
+      ],
+      "title": "BusinessCertainty",
+      "type": "string"
+    },
+    "Conditionality": {
+      "enum": [
+        "NONE",
+        "CONDITIONAL",
+        "UNKNOWN"
+      ],
+      "title": "Conditionality",
+      "type": "string"
+    },
+    "Direction": {
+      "enum": [
+        "INCREASE",
+        "DECREASE",
+        "STABLE",
+        "MIXED",
+        "UNKNOWN",
+        "NA"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "char_end": {
+          "minimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_id",
+        "char_start",
+        "char_end"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "ExpectedSignal": {
+      "additionalProperties": false,
+      "properties": {
+        "signal_type": {
+          "$ref": "#/$defs/SignalType"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "impact_channel": {
+          "$ref": "#/$defs/ImpactChannel"
+        },
+        "business_certainty": {
+          "$ref": "#/$defs/BusinessCertainty"
+        },
+        "conditionality": {
+          "$ref": "#/$defs/Conditionality"
+        },
+        "condition_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition Text"
+        },
+        "negated": {
+          "title": "Negated",
+          "type": "boolean"
+        },
+        "magnitude_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Magnitude Value"
+        },
+        "magnitude_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Magnitude Unit"
+        },
+        "effective_start": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effective Start"
+        },
+        "effective_end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Effective End"
+        },
+        "forecast_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Forecast Key"
+        },
+        "supersedes_source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supersedes Source Id"
+        },
+        "decision": {
+          "enum": [
+            "PASS",
+            "NO_SIGNAL",
+            "REVIEW"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "abstention_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Abstention Reason"
+        }
+      },
+      "required": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "negated",
+        "decision"
+      ],
+      "title": "ExpectedSignal",
+      "type": "object"
+    },
+    "ImpactChannel": {
+      "enum": [
+        "DEMAND",
+        "FULFILLMENT",
+        "MIX_ALLOCATION",
+        "UNKNOWN"
+      ],
+      "title": "ImpactChannel",
+      "type": "string"
+    },
+    "SignalType": {
+      "enum": [
+        "DEMAND_EXPECTATION",
+        "PURCHASE_INTENT",
+        "ORDER_LIFECYCLE",
+        "QUANTITY_REVISION",
+        "TIMING_REVISION",
+        "INVENTORY_POSITION",
+        "COMMERCIAL_EVENT",
+        "SUPPLY_FULFILLMENT",
+        "MARKET_CONTEXT",
+        "OTHER_RELEVANT",
+        "NO_SIGNAL"
+      ],
+      "title": "SignalType",
+      "type": "string"
+    },
+    "SourceEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/$defs/SourceType"
+        },
+        "source_record_id": {
+          "title": "Source Record Id",
+          "type": "string"
+        },
+        "source_revision": {
+          "title": "Source Revision",
+          "type": "string"
+        },
+        "authored_at": {
+          "format": "date-time",
+          "title": "Authored At",
+          "type": "string"
+        },
+        "available_at": {
+          "format": "date-time",
+          "title": "Available At",
+          "type": "string"
+        },
+        "raw_text": {
+          "default": "",
+          "title": "Raw Text",
+          "type": "string"
+        },
+        "content_hash": {
+          "title": "Content Hash",
+          "type": "string"
+        },
+        "entity_mentions_raw": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Entity Mentions Raw",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "0.1.0",
+          "default": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_type",
+        "source_record_id",
+        "source_revision",
+        "authored_at",
+        "available_at",
+        "content_hash"
+      ],
+      "title": "SourceEvidence",
+      "type": "object"
+    },
+    "SourceType": {
+      "enum": [
+        "account_note",
+        "service_note",
+        "supplier_commentary",
+        "sales_commentary",
+        "other"
+      ],
+      "title": "SourceType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "d2-0.1.0",
+      "default": "d2-0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "dataset_id": {
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "known_entities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Known Entities",
+      "type": "array"
+    },
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/AnnotatedCase"
+      },
+      "minItems": 1,
+      "title": "Cases",
+      "type": "array"
+    }
+  },
+  "required": [
+    "dataset_id",
+    "description",
+    "known_entities",
+    "cases"
+  ],
+  "title": "AnnotationDataset",
+  "type": "object"
+}

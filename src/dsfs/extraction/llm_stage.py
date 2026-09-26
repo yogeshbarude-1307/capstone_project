@@ -2,7 +2,7 @@
 
 docs/14-open-questions.md item 1: the exact local model/runtime is not yet
 resolved. docs/07-extraction-pipeline-design.md documents the required
-degradation path for exactly this situation: the rules + NER stages
+baseline for this situation: the regex + supplied-mention matching stages
 (rules.py, signal_types.py, entity_resolution.py) run unconditionally and
 ARE the current extraction pipeline; this stage exists as a clearly-labeled,
 swappable extension point behind the same interface, gated off by
@@ -42,7 +42,7 @@ def extract_with_local_llm(text: str, settings: Settings) -> dict:
         raise LocalLLMUnavailableError(
             "The local LLM extraction stage is disabled or unconfigured "
             "(Settings.llm_extraction_enabled=False or local_llm_model_path is unset). "
-            "This is the documented Milestone 3 state: the rules+NER pipeline "
+            "This is the documented Milestone 3 state: the rules baseline "
             "(dsfs.extraction.rules / dsfs.extraction.signal_types) is the actual "
             "extractor for this POC. See docs/14-open-questions.md item 1 and "
             "docs/07-extraction-pipeline-design.md 'Degradation path'."

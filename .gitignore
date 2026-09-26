@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.test-tmp-*/
+pytest-cache-files-*/
 .venv/
 venv/
 *.egg-info/
@@ -16,7 +18,7 @@ data/processed/*
 !data/processed/.gitkeep
 
 # local model weights (never commit binaries)
-models/
+/models/
 *.gguf
 *.safetensors
 *.bin
@@ -25,4 +27,5 @@ models/
 runs/
 reports/*.json
 reports/*.html
+reports/extraction/
 !reports/.gitkeep

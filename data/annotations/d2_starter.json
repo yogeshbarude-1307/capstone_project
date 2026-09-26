@@ -1,0 +1,3825 @@
+{
+  "schema_version": "d2-0.1.0",
+  "dataset_id": "d2-starter-0.1.0",
+  "description": "40 assistant-authored development challenge cases. Provisional expected labels; not human gold, blind holdout, or natural prevalence. No generator template/ground-truth imports.",
+  "known_entities": [
+    "CUST-0001",
+    "CUST-0002"
+  ],
+  "cases": [
+    {
+      "evidence": {
+        "source_id": "D2-001",
+        "source_type": "account_note",
+        "source_record_id": "D2-001",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Demand is expected to rise following the branch opening.",
+        "content_hash": "sha256:09ca7215a72302a8c4ae5f83bd2d69a835c3bf67782091fafb6021bd291a4c24",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-001",
+      "template_group": "D2-001",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "paraphrase"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-001",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-001",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-001",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-001",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-001",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-002",
+        "source_type": "account_note",
+        "source_record_id": "D2-002",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The customer expects to decrease orders next month.",
+        "content_hash": "sha256:34114ea221fd5215b85f83186bf80083153f0b7ec5fbebd66ed187d371ade6f4",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-002",
+      "template_group": "calendar-and-reversal-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "temporal"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": "2026-02-01T00:00:00Z",
+        "effective_end": "2026-03-01T00:00:00Z",
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-002",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-002",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-002",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-002",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "effective_start": [
+          {
+            "source_id": "D2-002",
+            "char_start": 51,
+            "char_end": 61
+          }
+        ],
+        "effective_end": [
+          {
+            "source_id": "D2-002",
+            "char_start": 51,
+            "char_end": 61
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-002",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-003",
+        "source_type": "account_note",
+        "source_record_id": "D2-003",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: We anticipate weaker demand after the holiday rush.",
+        "content_hash": "sha256:5d26a263043a5db18ccefef79b04df9eea0020b3f5be35d88e09a2414af1b111",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-003",
+      "template_group": "D2-003",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "paraphrase"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-003",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-003",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-003",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-003",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-003",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-004",
+        "source_type": "account_note",
+        "source_record_id": "D2-004",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer confirmed they will increase purchase volume by roughly 15% next month.",
+        "content_hash": "sha256:930cc2c1a52ad5d321552c6efd9775a763008e001e2580bf62f0bf0abed6aac3",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-004",
+      "template_group": "explicit-percent-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "magnitude",
+        "temporal"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "PURCHASE_INTENT",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": 15.0,
+        "magnitude_unit": "%",
+        "effective_start": "2026-02-01T00:00:00Z",
+        "effective_end": "2026-03-01T00:00:00Z",
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-004",
+            "char_start": 11,
+            "char_end": 91
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-004",
+            "char_start": 11,
+            "char_end": 91
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-004",
+            "char_start": 11,
+            "char_end": 91
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-004",
+            "char_start": 11,
+            "char_end": 91
+          }
+        ],
+        "magnitude_value": [
+          {
+            "source_id": "D2-004",
+            "char_start": 76,
+            "char_end": 79
+          }
+        ],
+        "magnitude_unit": [
+          {
+            "source_id": "D2-004",
+            "char_start": 78,
+            "char_end": 79
+          }
+        ],
+        "effective_start": [
+          {
+            "source_id": "D2-004",
+            "char_start": 80,
+            "char_end": 90
+          }
+        ],
+        "effective_end": [
+          {
+            "source_id": "D2-004",
+            "char_start": 80,
+            "char_end": 90
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-004",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-005",
+        "source_type": "account_note",
+        "source_record_id": "D2-005",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The buyer is considering purchasing more cases.",
+        "content_hash": "sha256:635073dbf37d40d79c421342d6d34cd7a4107492c08414c8c7097bbdaac47456",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-005",
+      "template_group": "D2-005",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "hedged",
+        "paraphrase"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "PURCHASE_INTENT",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "POSSIBLE",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-005",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-005",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-005",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-005",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-005",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-006",
+        "source_type": "account_note",
+        "source_record_id": "D2-006",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Order PO-17 has been cancelled; remove its 200 units from the booking.",
+        "content_hash": "sha256:dd88b137ccbf6bad8591d2a5d7361a28b7065cd7a36dc8c24a37365a04381951",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-006",
+      "template_group": "D2-006",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "cancellation",
+        "magnitude"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "ORDER_LIFECYCLE",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": 200.0,
+        "magnitude_unit": "units",
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-006",
+            "char_start": 11,
+            "char_end": 81
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-006",
+            "char_start": 11,
+            "char_end": 81
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-006",
+            "char_start": 11,
+            "char_end": 81
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-006",
+            "char_start": 11,
+            "char_end": 81
+          }
+        ],
+        "magnitude_value": [
+          {
+            "source_id": "D2-006",
+            "char_start": 54,
+            "char_end": 57
+          }
+        ],
+        "magnitude_unit": [
+          {
+            "source_id": "D2-006",
+            "char_start": 58,
+            "char_end": 63
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-006",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-007",
+        "source_type": "account_note",
+        "source_record_id": "D2-007",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Please revise the order quantity downward by 20 units.",
+        "content_hash": "sha256:07541568d5c664ebc6c7cb2b6026c92395ec62f2417c9fc37a8291b7d8fb92a3",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-007",
+      "template_group": "D2-007",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "magnitude",
+        "paraphrase"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "QUANTITY_REVISION",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": 20.0,
+        "magnitude_unit": "units",
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-007",
+            "char_start": 11,
+            "char_end": 65
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-007",
+            "char_start": 11,
+            "char_end": 65
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-007",
+            "char_start": 11,
+            "char_end": 65
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-007",
+            "char_start": 11,
+            "char_end": 65
+          }
+        ],
+        "magnitude_value": [
+          {
+            "source_id": "D2-007",
+            "char_start": 56,
+            "char_end": 58
+          }
+        ],
+        "magnitude_unit": [
+          {
+            "source_id": "D2-007",
+            "char_start": 59,
+            "char_end": 64
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-007",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-008",
+        "source_type": "account_note",
+        "source_record_id": "D2-008",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer expects to decrease the order quantity by roughly 10%.",
+        "content_hash": "sha256:c4b29208383f86e598bf40d6fdc4b62d8d5c3cddb8b067f23966f9b8d506897a",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-008",
+      "template_group": "explicit-percent-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "magnitude"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "QUANTITY_REVISION",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": 10.0,
+        "magnitude_unit": "%",
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-008",
+            "char_start": 11,
+            "char_end": 74
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-008",
+            "char_start": 11,
+            "char_end": 74
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-008",
+            "char_start": 11,
+            "char_end": 74
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-008",
+            "char_start": 11,
+            "char_end": 74
+          }
+        ],
+        "magnitude_value": [
+          {
+            "source_id": "D2-008",
+            "char_start": 70,
+            "char_end": 73
+          }
+        ],
+        "magnitude_unit": [
+          {
+            "source_id": "D2-008",
+            "char_start": 72,
+            "char_end": 73
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-008",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-009",
+        "source_type": "account_note",
+        "source_record_id": "D2-009",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The delivery schedule has been delayed; the new date is not yet agreed.",
+        "content_hash": "sha256:c36b0c947afc605bc1b534932cde24e945e69c012d759cd0332cc650858fc663",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-009",
+      "template_group": "D2-009",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "vague_date"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "TIMING_REVISION",
+        "direction": "NA",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-009",
+            "char_start": 11,
+            "char_end": 82
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-009",
+            "char_start": 11,
+            "char_end": 82
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-009",
+            "char_start": 11,
+            "char_end": 82
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-009",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-010",
+        "source_type": "account_note",
+        "source_record_id": "D2-010",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Inventory fell by 30 cases during the count.",
+        "content_hash": "sha256:909166c8409c895ca4116f0addf80dd945d7e945d8859c41466771084aa98d81",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-010",
+      "template_group": "D2-010",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "magnitude"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "INVENTORY_POSITION",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": 30.0,
+        "magnitude_unit": "cases",
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-010",
+            "char_start": 11,
+            "char_end": 55
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-010",
+            "char_start": 11,
+            "char_end": 55
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-010",
+            "char_start": 11,
+            "char_end": 55
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-010",
+            "char_start": 11,
+            "char_end": 55
+          }
+        ],
+        "magnitude_value": [
+          {
+            "source_id": "D2-010",
+            "char_start": 29,
+            "char_end": 31
+          }
+        ],
+        "magnitude_unit": [
+          {
+            "source_id": "D2-010",
+            "char_start": 32,
+            "char_end": 37
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-010",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-011",
+        "source_type": "account_note",
+        "source_record_id": "D2-011",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The upcoming promotion is expected to raise demand.",
+        "content_hash": "sha256:18a7440fbc32d02cae07473afc136d808b988f724a23930992eb806893a3ac6e",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-011",
+      "template_group": "D2-011",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "paraphrase"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "COMMERCIAL_EVENT",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-011",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-011",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-011",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-011",
+            "char_start": 11,
+            "char_end": 62
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-011",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-012",
+        "source_type": "account_note",
+        "source_record_id": "D2-012",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: A supplier shortage has reduced fulfillment capacity.",
+        "content_hash": "sha256:0020ec0795be32bbe63750e7ad8029878435b245a9d4cd3a8bcbb6c54f66df2a",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-012",
+      "template_group": "D2-012",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "supply_channel"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "SUPPLY_FULFILLMENT",
+        "direction": "DECREASE",
+        "impact_channel": "FULFILLMENT",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-012",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-012",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-012",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-012",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-012",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-013",
+        "source_type": "account_note",
+        "source_record_id": "D2-013",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Analysts expect market demand to increase.",
+        "content_hash": "sha256:f7fb63ad18987983b96cbb3a996253bf872c4db80d95adcdaaedbcefa8047a78",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-013",
+      "template_group": "D2-013",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "paraphrase"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "MARKET_CONTEXT",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-013",
+            "char_start": 11,
+            "char_end": 53
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-013",
+            "char_start": 11,
+            "char_end": 53
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-013",
+            "char_start": 11,
+            "char_end": 53
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-013",
+            "char_start": 11,
+            "char_end": 53
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-013",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-014",
+        "source_type": "account_note",
+        "source_record_id": "D2-014",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: A regulatory review may affect this account; the direction is not yet known.",
+        "content_hash": "sha256:af73c7d96ae6d337ff38b9f3d0d49ed6c907caa3c3d5966d390b51d81901fc24",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-014",
+      "template_group": "D2-014",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "uncertainty"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": true,
+      "expected": {
+        "signal_type": "OTHER_RELEVANT",
+        "direction": "UNKNOWN",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "POSSIBLE",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "REVIEW",
+        "abstention_reason": "insufficient_information"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-014",
+            "char_start": 11,
+            "char_end": 87
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-014",
+            "char_start": 11,
+            "char_end": 87
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-014",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-015",
+        "source_type": "account_note",
+        "source_record_id": "D2-015",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The contact changed their telephone extension.",
+        "content_hash": "sha256:06a74099d769e7abb31891edff51b3ecb7205683d3a3a9b97f63cf2835083cb9",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-015",
+      "template_group": "D2-015",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-015",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-016",
+        "source_type": "account_note",
+        "source_record_id": "D2-016",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Meeting minutes were archived in the account folder.",
+        "content_hash": "sha256:f775ca7f3046f77cddb6112cdd95f724fec9be886386e0a31f958b5e301e85c2",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-016",
+      "template_group": "D2-016",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-016",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-017",
+        "source_type": "account_note",
+        "source_record_id": "D2-017",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The invoice attachment was resent to the administrator.",
+        "content_hash": "sha256:1788207cfe5dc44c0b79ee060cd29ad0fc6b64c1a534a1695a908e999adbe160",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-017",
+      "template_group": "D2-017",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-017",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-018",
+        "source_type": "account_note",
+        "source_record_id": "D2-018",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The account owner will be away on Friday.",
+        "content_hash": "sha256:10987061d5614ddd93df0fbb67c87f41e14b38fbbed6bc597122de869a7a3f8b",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-018",
+      "template_group": "D2-018",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-018",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-019",
+        "source_type": "account_note",
+        "source_record_id": "D2-019",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: A new support-portal password was requested.",
+        "content_hash": "sha256:218acb413f4a40237ef0624469abc6f6f84615bbe5ed5bea47a22573a9b543eb",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-019",
+      "template_group": "D2-019",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-019",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-020",
+        "source_type": "account_note",
+        "source_record_id": "D2-020",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The mailing address was corrected.",
+        "content_hash": "sha256:ce99c49584af05e6959a0f82c525a47e33d840221bbc037d4d7e0629d41bb8ea",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-020",
+      "template_group": "D2-020",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-020",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-021",
+        "source_type": "account_note",
+        "source_record_id": "D2-021",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The routine check-in produced no business update.",
+        "content_hash": "sha256:8a9d0bbc5f043c076cdc686b11b99a5fad20df5d0830bcc3a863dd37575e6c1f",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-021",
+      "template_group": "D2-021",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "negation"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-021",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-022",
+        "source_type": "account_note",
+        "source_record_id": "D2-022",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The contact confirmed attendance at the training session.",
+        "content_hash": "sha256:bb5595e4b5785f3b752c079c9346d039df383f636bd32e7d5d36d758baa045a4",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-022",
+      "template_group": "D2-022",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-022",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-023",
+        "source_type": "account_note",
+        "source_record_id": "D2-023",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: William asked where the onboarding guide is stored.",
+        "content_hash": "sha256:98eefc40202526ecb7ee963ece0bf6c7d76d8085a629a5abc878deb438b079bf",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-023",
+      "template_group": "D2-023",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-023",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-024",
+        "source_type": "account_note",
+        "source_record_id": "D2-024",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: The service desk closed the duplicate login ticket.",
+        "content_hash": "sha256:47d2686e2e64f4c2cc2969b390db1add9e6721c2c154a74188fd4559d2ca47d1",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-024",
+      "template_group": "D2-024",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "no_signal",
+        "control"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "NO_SIGNAL",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "NO_SIGNAL",
+        "abstention_reason": "no_signal"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "forecast_key": [
+          {
+            "source_id": "D2-024",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-025",
+        "source_type": "account_note",
+        "source_record_id": "D2-025",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer is not increasing the order.",
+        "content_hash": "sha256:5c685976772110ce5cc4c98c249b48ef24e95da799981f94ef306cb7d319ce0b",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-025",
+      "template_group": "D2-025",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "negation"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "ORDER_LIFECYCLE",
+        "direction": "STABLE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": true,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-025",
+            "char_start": 11,
+            "char_end": 48
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-025",
+            "char_start": 11,
+            "char_end": 48
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-025",
+            "char_start": 11,
+            "char_end": 48
+          }
+        ],
+        "negated": [
+          {
+            "source_id": "D2-025",
+            "char_start": 11,
+            "char_end": 48
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-025",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-026",
+        "source_type": "account_note",
+        "source_record_id": "D2-026",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer will not increase demand.",
+        "content_hash": "sha256:889b4583309aa37101b88c856802453841ed8ffe8a2e78f212820f5632121835",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-026",
+      "template_group": "D2-026",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "negation"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "NA",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": true,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-026",
+            "char_start": 11,
+            "char_end": 45
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-026",
+            "char_start": 11,
+            "char_end": 45
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-026",
+            "char_start": 11,
+            "char_end": 45
+          }
+        ],
+        "negated": [
+          {
+            "source_id": "D2-026",
+            "char_start": 11,
+            "char_end": 45
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-026",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-027",
+        "source_type": "account_note",
+        "source_record_id": "D2-027",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: No reduction in purchase volume is planned.",
+        "content_hash": "sha256:8207cb098f15e9430e170d4b5be282eae690fa2f65a9f5ed53e64d254db133b4",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-027",
+      "template_group": "D2-027",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "negation"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "PURCHASE_INTENT",
+        "direction": "NA",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": true,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-027",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-027",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-027",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "negated": [
+          {
+            "source_id": "D2-027",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-027",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-028",
+        "source_type": "account_note",
+        "source_record_id": "D2-028",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Not only will demand increase, it will increase sharply.",
+        "content_hash": "sha256:d5c610d637808a5fe0bb8b24e7ff498bd4b3eef9547b8b3d0e75165efe02f0ff",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-028",
+      "template_group": "D2-028",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "negation"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "LIKELY",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-028",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-028",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-028",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-028",
+            "char_start": 11,
+            "char_end": 67
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-028",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-029",
+        "source_type": "account_note",
+        "source_record_id": "D2-029",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer may increase volume if financing is secured.",
+        "content_hash": "sha256:fa7e93b93412d5aa7101739f2515a1d8b935c4060ab24cf47416d83078102667",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-029",
+      "template_group": "D2-029",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "conditional",
+        "hedged"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "POSSIBLE",
+        "conditionality": "CONDITIONAL",
+        "condition_text": "if financing is secured",
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-029",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-029",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-029",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-029",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "conditionality": [
+          {
+            "source_id": "D2-029",
+            "char_start": 11,
+            "char_end": 64
+          }
+        ],
+        "condition_text": [
+          {
+            "source_id": "D2-029",
+            "char_start": 40,
+            "char_end": 63
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-029",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-030",
+        "source_type": "account_note",
+        "source_record_id": "D2-030",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Unless funding arrives, the customer will decrease orders.",
+        "content_hash": "sha256:bd31040777a75817a1043d0470b9232d60294462fdb546a73942c1123ef8d674",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-030",
+      "template_group": "D2-030",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "conditional"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "LIKELY",
+        "conditionality": "CONDITIONAL",
+        "condition_text": "Unless funding arrives",
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-030",
+            "char_start": 11,
+            "char_end": 69
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-030",
+            "char_start": 11,
+            "char_end": 69
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-030",
+            "char_start": 11,
+            "char_end": 69
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-030",
+            "char_start": 11,
+            "char_end": 69
+          }
+        ],
+        "conditionality": [
+          {
+            "source_id": "D2-030",
+            "char_start": 11,
+            "char_end": 69
+          }
+        ],
+        "condition_text": [
+          {
+            "source_id": "D2-030",
+            "char_start": 11,
+            "char_end": 33
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-030",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-031",
+        "source_type": "account_note",
+        "source_record_id": "D2-031",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer will likely increase orders next quarter.",
+        "content_hash": "sha256:68925bb16d7baa01f26055ae75b2f805407881dde14674e3d21c4cb925845b4b",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-031",
+      "template_group": "calendar-and-reversal-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "temporal",
+        "conditional"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "LIKELY",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": "2026-04-01T00:00:00Z",
+        "effective_end": "2026-07-01T00:00:00Z",
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-031",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-031",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-031",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-031",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ],
+        "effective_start": [
+          {
+            "source_id": "D2-031",
+            "char_start": 48,
+            "char_end": 60
+          }
+        ],
+        "effective_end": [
+          {
+            "source_id": "D2-031",
+            "char_start": 48,
+            "char_end": 60
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-031",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-032",
+        "source_type": "account_note",
+        "source_record_id": "D2-032",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer expects to decrease orders next year.",
+        "content_hash": "sha256:b16da91ca8dd2e2549f4f8dd9ccafb9870be11bf2a26ed61cfcf378a38544926",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-032",
+      "template_group": "calendar-and-reversal-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "temporal"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "DECREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": "2027-01-01T00:00:00Z",
+        "effective_end": "2028-01-01T00:00:00Z",
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-032",
+            "char_start": 11,
+            "char_end": 57
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-032",
+            "char_start": 11,
+            "char_end": 57
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-032",
+            "char_start": 11,
+            "char_end": 57
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-032",
+            "char_start": 11,
+            "char_end": 57
+          }
+        ],
+        "effective_start": [
+          {
+            "source_id": "D2-032",
+            "char_start": 47,
+            "char_end": 56
+          }
+        ],
+        "effective_end": [
+          {
+            "source_id": "D2-032",
+            "char_start": 47,
+            "char_end": 56
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-032",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-033",
+        "source_type": "account_note",
+        "source_record_id": "D2-033",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001 / CUST-0002: One of these accounts expects to increase orders; the author did not say which.",
+        "content_hash": "sha256:a32a953d8c85476d284252de7ecdb48c58fd3f6b4bfc913254769a388466ca2c",
+        "entity_mentions_raw": [
+          "CUST-0001",
+          "CUST-0002"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-033",
+      "template_group": "D2-033",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "ambiguous_entity"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": true,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": null,
+        "supersedes_source_id": null,
+        "decision": "REVIEW",
+        "abstention_reason": "ambiguous_entity"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-033",
+            "char_start": 23,
+            "char_end": 102
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-033",
+            "char_start": 23,
+            "char_end": 102
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-033",
+            "char_start": 23,
+            "char_end": 102
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-033",
+            "char_start": 23,
+            "char_end": 102
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-034",
+        "source_type": "account_note",
+        "source_record_id": "D2-034",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-9999: This unlisted customer expects to increase orders.",
+        "content_hash": "sha256:93c9cabfce042da43f6567bc588e566b7e1b5d9f4b96d72addcdb09bf63bfb9e",
+        "entity_mentions_raw": [
+          "CUST-9999"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-034",
+      "template_group": "D2-034",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "unresolved_entity"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": true,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": null,
+        "supersedes_source_id": null,
+        "decision": "REVIEW",
+        "abstention_reason": "unresolved_entity"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-034",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-034",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-034",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-034",
+            "char_start": 11,
+            "char_end": 61
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-035",
+        "source_type": "account_note",
+        "source_record_id": "D2-035",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Same as last week; the prior note is unavailable.",
+        "content_hash": "sha256:2f16bd4d81bb9cbec59d2fe6f6563fd891d335b37dda7e97912b3372504422d6",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-035",
+      "template_group": "D2-035",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "stale_reference"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": true,
+      "expected": {
+        "signal_type": "OTHER_RELEVANT",
+        "direction": "UNKNOWN",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "UNKNOWN",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "REVIEW",
+        "abstention_reason": "missing_context"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-035",
+            "char_start": 11,
+            "char_end": 60
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-035",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-036",
+        "source_type": "account_note",
+        "source_record_id": "D2-036",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer will increase demand or decrease demand; neither scenario is settled.",
+        "content_hash": "sha256:2d2314a462b42f6cd208e37d3e7d68da7bd5a321f5b2d1a5843b367956548bc2",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-036",
+      "template_group": "D2-036",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "contradiction",
+        "hedged"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": true,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "MIXED",
+        "impact_channel": "DEMAND",
+        "business_certainty": "POSSIBLE",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "REVIEW",
+        "abstention_reason": "conflicting_direction"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-036",
+            "char_start": 11,
+            "char_end": 89
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-036",
+            "char_start": 11,
+            "char_end": 89
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-036",
+            "char_start": 11,
+            "char_end": 89
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-036",
+            "char_start": 11,
+            "char_end": 89
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-036",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-037",
+        "source_type": "account_note",
+        "source_record_id": "D2-037",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer expects to increase orders next month.",
+        "content_hash": "sha256:fd806b112d716ccbfa2e081cdaae5973bd229312d3d379708e97769e64d789d3",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "reversal-pair",
+      "template_group": "calendar-and-reversal-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "reversal",
+        "temporal"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "EXPECTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": "2026-02-01T00:00:00Z",
+        "effective_end": "2026-03-01T00:00:00Z",
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-037",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-037",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-037",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-037",
+            "char_start": 11,
+            "char_end": 58
+          }
+        ],
+        "effective_start": [
+          {
+            "source_id": "D2-037",
+            "char_start": 47,
+            "char_end": 57
+          }
+        ],
+        "effective_end": [
+          {
+            "source_id": "D2-037",
+            "char_start": 47,
+            "char_end": 57
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-037",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-038",
+        "source_type": "account_note",
+        "source_record_id": "D2-038",
+        "source_revision": "r1",
+        "authored_at": "2026-01-16T09:00:00Z",
+        "available_at": "2026-01-16T09:10:00Z",
+        "raw_text": "CUST-0001: Previous expansion plan has been cancelled.",
+        "content_hash": "sha256:d5c6025226f883549b3f77fc818dba375f47cd069a8cea902f863a2c0e475d2c",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "reversal-pair",
+      "template_group": "calendar-and-reversal-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "reversal",
+        "negation"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "STABLE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": true,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": "D2-037",
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-038",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-038",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-038",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-038",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "negated": [
+          {
+            "source_id": "D2-038",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-038",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-039",
+        "source_type": "account_note",
+        "source_record_id": "D2-039",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Previous expansion plan has been cancelled.",
+        "content_hash": "sha256:d5c6025226f883549b3f77fc818dba375f47cd069a8cea902f863a2c0e475d2c",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-039",
+      "template_group": "calendar-and-reversal-controls",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "reversal",
+        "negation"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": true,
+      "expected": {
+        "signal_type": "OTHER_RELEVANT",
+        "direction": "NA",
+        "impact_channel": "UNKNOWN",
+        "business_certainty": "ASSERTED",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": true,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "REVIEW",
+        "abstention_reason": "missing_context"
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-039",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-039",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "negated": [
+          {
+            "source_id": "D2-039",
+            "char_start": 11,
+            "char_end": 54
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-039",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    },
+    {
+      "evidence": {
+        "source_id": "D2-040",
+        "source_type": "account_note",
+        "source_record_id": "D2-040",
+        "source_revision": "r1",
+        "authored_at": "2026-01-15T09:00:00Z",
+        "available_at": "2026-01-15T09:10:00Z",
+        "raw_text": "CUST-0001: Customer may increase orders, but no percentage has been agreed.",
+        "content_hash": "sha256:3342ac19eda0a165749853f22731a0ae2407b70dcd187e31575b94d8ae060538",
+        "entity_mentions_raw": [
+          "CUST-0001"
+        ],
+        "schema_version": "0.1.0"
+      },
+      "scenario_id": "D2-040",
+      "template_group": "D2-040",
+      "split": "dev",
+      "sample": "challenge",
+      "tags": [
+        "magnitude",
+        "hedged"
+      ],
+      "label_origin": "assistant_draft",
+      "annotator_ids": [
+        "assistant-draft-v1"
+      ],
+      "adjudication_state": "draft",
+      "adjudicator_id": null,
+      "ambiguity_flag": false,
+      "expected": {
+        "signal_type": "DEMAND_EXPECTATION",
+        "direction": "INCREASE",
+        "impact_channel": "DEMAND",
+        "business_certainty": "POSSIBLE",
+        "conditionality": "NONE",
+        "condition_text": null,
+        "negated": false,
+        "magnitude_value": null,
+        "magnitude_unit": null,
+        "effective_start": null,
+        "effective_end": null,
+        "forecast_key": "CUST-0001",
+        "supersedes_source_id": null,
+        "decision": "PASS",
+        "abstention_reason": null
+      },
+      "scored_fields": [
+        "signal_type",
+        "direction",
+        "impact_channel",
+        "business_certainty",
+        "conditionality",
+        "condition_text",
+        "negated",
+        "magnitude_value",
+        "magnitude_unit",
+        "effective_start",
+        "effective_end",
+        "forecast_key",
+        "supersedes_source_id"
+      ],
+      "field_evidence": {
+        "signal_type": [
+          {
+            "source_id": "D2-040",
+            "char_start": 11,
+            "char_end": 75
+          }
+        ],
+        "direction": [
+          {
+            "source_id": "D2-040",
+            "char_start": 11,
+            "char_end": 75
+          }
+        ],
+        "impact_channel": [
+          {
+            "source_id": "D2-040",
+            "char_start": 11,
+            "char_end": 75
+          }
+        ],
+        "business_certainty": [
+          {
+            "source_id": "D2-040",
+            "char_start": 11,
+            "char_end": 75
+          }
+        ],
+        "forecast_key": [
+          {
+            "source_id": "D2-040",
+            "char_start": 0,
+            "char_end": 9
+          }
+        ]
+      }
+    }
+  ]
+}

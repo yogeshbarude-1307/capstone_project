@@ -24,6 +24,16 @@ A high-accuracy extractor whose output carries no forecast-usable information, a
 
 Report all of the above using the **error taxonomy from `07-extraction-pipeline-design.md`** so failures are diagnosable, not just scored.
 
+## Implemented extraction evaluation
+
+**Milestone 4 implementation:** `python -m dsfs.evaluation.pipeline` evaluates
+the provisional D2 development starter. `15-extraction-evaluation-workflow.md`
+defines denominators, abstention/actionable-event distinctions, annotation-relative
+grounding, split checks, and report reproduction. Gold/held-out status is never
+inferred from schema validity. Natural-prevalence and challenge views remain
+separate, as do draft and human-reviewed label cohorts. Forecast metrics below
+are not implemented or claimed by the extraction report.
+
 ## Forecast metrics (`CONFIRMED`, see `08-forecasting-experiment-design.md` for the full protocol)
 
 MASE primary; MAE, signed bias, and incremental-lift percentage secondary; reported overall, on the signal-exposed subset, by horizon, and by ablation arm.

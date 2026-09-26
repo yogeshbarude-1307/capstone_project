@@ -4,6 +4,48 @@ Adapted directly from the Developer Handoff's own milestone list (Section 18), r
 
 ---
 
+## Verified implementation status — 2026-09-26
+
+| Milestone | Status | Evidence / remaining work |
+|---|---|---|
+| 0 | Complete | Numbered designs and canonical schemas present; status reconciled with code. |
+| 1 | Complete for source-checkout workflow | Missing models restored; contract validation and UTC handling tested. Dependency snapshot recorded. Fresh editable installation still needs verification where build tooling is available. |
+| 2 | Complete at POC default scale | 4,160 D0 rows and 675 D1 notes; deterministic source IDs, notes, and demand; no rendered-text dependency in demand realization. |
+| 3 | Rules baseline verified; hybrid stages deferred | Regex + supplied-mention matching, schema validation, persisted quarantine, immutable revision IDs, conservative reversal linking, historical status reconstruction. Statistical NER/local LLM remain unimplemented. |
+| 4 | Evaluation machinery implemented; human gold pending | 40 provisional development cases, annotation/split validation, metric tests, diagnostics, and reproducible reports. Independent adjudication and held-out D2 results remain outstanding. |
+| 5 | Complete | PIT-correct feature transformation: weekly cutoffs, 28-day horizon, 30/90-day lookbacks, direction/magnitude/conflict/staleness aggregation, schema-validated output. 39 new tests cover PIT eligibility, leakage, window boundaries, aggregation, and contract conformance. |
+| 6 | Complete | Feature access layer: `FeatureStore` with `get_features()` / `get_historical_features()`, `load_feature_store()` from persisted ledger + notes, CLI entry point `dsfs-features`. Raw text never returned. |
+| 7 | Complete | Rolling-origin forecast baseline (arm A): Ridge regression with lag/seasonal/rolling features, pure numpy (no sklearn). Frozen ForecastConfig enforces identical model config across arms. |
+| 8 | Complete | Enhanced arms B (oracle ground-truth features), C (extracted-signal features), D (shuffled control). Decision logic from docs/08 applied. Mandatory reporting caveat included. CLI `dsfs-forecast`. 20 tests cover rolling-origin correctness, config identity, metrics, shuffle alignment, and arm comparison. |
+| 9–12 | Not started | Next batch: controlled evaluation and ablations (9). |
+
+Verification: **181 passing tests** on Windows/Python 3.14.4; the default
+generator-to-ledger smoke run accepted 675/675 schema-valid records. Tests
+cover calendar boundaries, later cancellation availability, ambiguous targets,
+distinct re-extraction IDs, idempotent ledger retries, and rejected-record
+persistence. This does not establish the original hybrid pipeline's accuracy.
+
+Milestone 4 adds 31 tests covering hand-built confusion sets, missing/duplicate
+outputs, abstention, citation grounding, temporal overlap, provenance/split
+checks, report reproducibility, and gold-mode rejection of draft labels.
+The provisional starter yields actionable-event macro-F1 0.4158; this is a
+development diagnostic, not a held-out human-gold result. See docs/15 for the
+review workflow and remaining data dependency.
+
+Milestones 5–6 add 39 tests covering PIT eligibility (available_at <= cutoff,
+future-effective inclusion, superseded exclusion), window boundaries (30-day
+lookback, 90-day delay lookback), feature aggregation (direction votes, negation,
+magnitude, cancellations, conflicts, staleness), schema conformance, batch
+retrieval, DataFrame output, and the adversarial leakage test from docs/11.
+
+Milestones 7–8 add 20 tests covering rolling-origin correctness (no future
+leakage in training), config identity (frozen config shared across all arms),
+metric computations (MASE, MAE, bias, incremental lift), shuffled control
+(entity-time alignment broken, reproducible, lineage cleared), and arm
+comparison (B/C/D predictions differ from A).
+
+Next batch: implement Milestone 9 — controlled evaluation and ablation matrix.
+
 ### Milestone 0 — Research-to-development validation (this package)
 
 - **Objective:** confirm requirements, architecture, schemas, interfaces, assumptions, and blockers before any code exists.
@@ -25,9 +67,9 @@ Adapted directly from the Developer Handoff's own milestone list (Section 18), r
 - **Dependencies:** Milestone 0.
 - **Tests:** contract round-trip test (build a Pydantic object → dump → validate against JSON Schema → parse back).
 - **Acceptance criteria:** `pytest` runs green on an empty-but-wired repo; schema validation demonstrably rejects a malformed record.
-- **Risks:** none — this milestone is currently OUT OF SCOPE for this documentation-only effort (see below).
+- **Risks:** environment-specific dependency/build tooling; the tested snapshot is not a cross-platform lock.
 
-> **Scope note:** per your decision to produce documentation only in this pass, Milestones 1–12 below are **planned, not started**. They are included so the next work session has an unambiguous, testable sequence to execute against.
+> **Scope note:** the entries below retain the original objectives and acceptance criteria. The verified status table above records what is implemented and which planned capabilities remain deferred.
 
 ### Milestone 2 — Synthetic dataset
 
@@ -52,6 +94,10 @@ Adapted directly from the Developer Handoff's own milestone list (Section 18), r
 - **Risks:** local model infeasibility — triggers the documented degradation path, not a silent quality drop.
 
 ### Milestone 4 — Extraction evaluation
+
+**Current status:** engineering implemented; independent D2 annotation and
+held-out validation pending. The provisional report populates the required
+metrics without representing assistant-drafted labels as human gold.
 
 - **Objective:** measure extraction performance against D2, independent of forecasting.
 - **Inputs:** D2, the extraction pipeline's output on D2's source notes.

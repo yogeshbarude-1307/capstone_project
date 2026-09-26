@@ -69,6 +69,29 @@ def test_signal_record_pydantic_rejects_bad_enum_value(valid_signal_record):
         SignalRecord.model_validate(dumped)
 
 
+def test_json_schema_rejects_invalid_timestamp(valid_source_evidence):
+    dumped = valid_source_evidence.model_dump(mode="json")
+    dumped["authored_at"] = "not-a-timestamp"
+    with pytest.raises(ContractValidationError):
+        validate_record("source_evidence", dumped)
+
+
+def test_naive_synthetic_dates_are_serialized_as_utc(valid_source_evidence):
+    data = valid_source_evidence.model_dump()
+    data.update(authored_at="2026-01-05T09:00:00", available_at="2026-01-05T10:00:00")
+    evidence = SourceEvidence.model_validate(data)
+    assert evidence.model_dump(mode="json")["authored_at"].endswith("Z")
+    validate_record("source_evidence", evidence.model_dump(mode="json"))
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_signal_magnitude_must_be_finite(valid_signal_record, value):
+    data = valid_signal_record.model_dump()
+    data.update(magnitude_value=value, magnitude_unit="%")
+    with pytest.raises(ValidationError):
+        SignalRecord.model_validate(data)
+
+
 class TestBusinessRuleValidators:
     """These mirror the deterministic validator described in
     docs/07-extraction-pipeline-design.md: schema conformance is necessary

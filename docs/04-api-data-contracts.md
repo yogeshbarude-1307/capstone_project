@@ -12,6 +12,12 @@ Every stage of the pipeline validates its output against the relevant schema **b
 
 ## Compatibility rules (`PROPOSED`)
 
+**Current implementation:** Pydantic plus JSON Schema (with timestamp format
+checking) validate evidence/signals. Rejected extraction rows persist in a
+local `*_rejected.jsonl` file. Pandera/DuckDB batch validation and the access
+interfaces below remain planned. Source-checkout/editable installation is the
+supported workflow; canonical schemas are read from `docs/schemas/`.
+
 - Additive optional field → minor schema-version bump, backward compatible.
 - Enum expansion → minor bump, but every consumer must be checked against the new value before promotion.
 - Semantic redefinition of an existing field, or removal/rename of a required field → major schema-version bump; old and new versions coexist in the ledger, never silently reinterpreted.
