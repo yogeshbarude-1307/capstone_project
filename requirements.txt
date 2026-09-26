@@ -1,0 +1,30 @@
+# Core contracts / validation — all run fully offline once installed
+pydantic>=2.10
+pydantic-settings>=2.6
+jsonschema>=4.23
+
+# Storage
+pyarrow>=17
+duckdb>=1.1
+pandas>=2.2
+
+# Tabular / feature-table validation
+pandera>=0.20
+
+# Extraction (rules + NER); spaCy model download is a one-time local asset
+spacy>=3.7
+
+# Local semantic extraction stage (optional — degradation path documented in
+# docs/07-extraction-pipeline-design.md if unavailable/infeasible on this machine)
+transformers>=4.44
+torch>=2.3
+sentence-transformers>=3.0
+
+# Forecasting baseline
+scikit-learn>=1.5
+statsmodels>=0.14
+xgboost>=2.1
+
+# Dev / test
+pytest>=8.3
+hypothesis>=6.111

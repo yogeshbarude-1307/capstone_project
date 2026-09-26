@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# generated data artifacts (regenerable from the synthetic generator; never commit)
+data/raw/*
+data/interim/*
+data/processed/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+
+# local model weights (never commit binaries)
+models/
+*.gguf
+*.safetensors
+*.bin
+
+# run artifacts
+runs/
+reports/*.json
+reports/*.html
+!reports/.gitkeep

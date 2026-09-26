@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.poc/schemas/signal_record.schema.json",
+  "title": "SignalRecord",
+  "description": "Structured, versioned demand-signal event extracted from a SourceEvidence record. Ontology v0.1 (POC).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signal_id",
+    "logical_signal_id",
+    "schema_version",
+    "source_id",
+    "source_revision",
+    "signal_type",
+    "direction",
+    "impact_channel",
+    "business_certainty",
+    "conditionality",
+    "negated",
+    "entity_mentions",
+    "evidence_ref",
+    "extractor_version",
+    "extraction_config_version",
+    "extraction_run_id",
+    "extracted_at",
+    "validation_status",
+    "record_status"
+  ],
+  "properties": {
+    "signal_id": { "type": "string" },
+    "logical_signal_id": { "type": "string", "description": "Stable across revisions/re-extractions." },
+    "schema_version": { "type": "string", "const": "0.1.0" },
+
+    "source_id": { "type": "string" },
+    "source_revision": { "type": "string" },
+
+    "signal_type": {
+      "type": "string",
+      "enum": [
+        "DEMAND_EXPECTATION", "PURCHASE_INTENT", "ORDER_LIFECYCLE",
+        "QUANTITY_REVISION", "TIMING_REVISION", "INVENTORY_POSITION",
+        "COMMERCIAL_EVENT", "SUPPLY_FULFILLMENT", "MARKET_CONTEXT",
+        "OTHER_RELEVANT", "NO_SIGNAL"
+      ]
+    },
+    "signal_subtype": { "type": "string", "default": "UNKNOWN" },
+
+    "direction": { "type": "string", "enum": ["INCREASE", "DECREASE", "STABLE", "MIXED", "UNKNOWN", "NA"] },
+    "impact_channel": { "type": "string", "enum": ["DEMAND", "FULFILLMENT", "MIX_ALLOCATION", "UNKNOWN"] },
+    "business_certainty": { "type": "string", "enum": ["ASSERTED", "EXPECTED", "LIKELY", "POSSIBLE", "UNKNOWN"] },
+    "conditionality": { "type": "string", "enum": ["NONE", "CONDITIONAL", "UNKNOWN"] },
+    "condition_text": { "type": ["string", "null"] },
+    "negated": { "type": "boolean" },
+
+    "magnitude_value": { "type": ["number", "null"] },
+    "magnitude_low": { "type": ["number", "null"] },
+    "magnitude_high": { "type": ["number", "null"] },
+    "magnitude_unit": { "type": ["string", "null"] },
+    "magnitude_basis": { "type": ["string", "null"], "enum": ["ABSOLUTE", "DELTA", "PERCENT", "RANGE", null] },
+
+    "time_expression_raw": { "type": ["string", "null"] },
+    "effective_start": { "type": ["string", "null"], "format": "date-time" },
+    "effective_end": { "type": ["string", "null"], "format": "date-time" },
+    "time_granularity": {
+      "type": ["string", "null"],
+      "enum": ["day", "week", "month", "quarter", "year", "interval", "unknown", null]
+    },
+
+    "entity_mentions": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "resolved_entities": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "forecast_key": { "type": ["string", "null"] },
+
+    "evidence_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "char_start", "char_end"],
+      "properties": {
+        "source_id": { "type": "string" },
+        "char_start": { "type": "integer", "minimum": 0 },
+        "char_end": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "extractor_version": { "type": "string" },
+    "extraction_config_version": { "type": "string" },
+    "extraction_run_id": { "type": "string" },
+    "extracted_at": { "type": "string", "format": "date-time" },
+    "extraction_confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+
+    "validation_status": { "type": "string", "enum": ["PASS", "REVIEW", "FAIL"] },
+    "abstention_reason": { "type": ["string", "null"] },
+
+    "record_status": { "type": "string", "enum": ["ACTIVE", "SUPERSEDED", "RETRACTED"] },
+    "supersedes_signal_id": { "type": ["string", "null"] },
+    "related_signal_ids": { "type": "array", "items": { "type": "string" }, "default": [] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "signal_type": { "const": "NO_SIGNAL" } } },
+      "then": { "properties": { "direction": { "const": "NA" } } }
+    }
+  ]
+}

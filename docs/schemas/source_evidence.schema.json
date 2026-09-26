@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.poc/schemas/source_evidence.schema.json",
+  "title": "SourceEvidence",
+  "description": "Immutable raw-note evidence record. schema_version 0.1.0 (POC).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_id",
+    "source_type",
+    "source_record_id",
+    "source_revision",
+    "authored_at",
+    "available_at",
+    "content_hash",
+    "schema_version"
+  ],
+  "properties": {
+    "source_id": { "type": "string", "description": "Immutable physical record ID (UUID)." },
+    "source_type": {
+      "type": "string",
+      "enum": ["account_note", "service_note", "supplier_commentary", "sales_commentary", "other"]
+    },
+    "source_record_id": { "type": "string", "description": "Stable upstream identity across revisions." },
+    "source_revision": { "type": "string", "description": "Revision identifier; a new value on any edit." },
+    "authored_at": { "type": "string", "format": "date-time" },
+    "available_at": { "type": "string", "format": "date-time", "description": "Knowledge-time gate; must be >= authored_at." },
+    "raw_text": { "type": "string" },
+    "content_hash": { "type": "string", "description": "Hash of raw_text at this revision." },
+    "entity_mentions_raw": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "schema_version": { "type": "string", "const": "0.1.0" }
+  }
+}

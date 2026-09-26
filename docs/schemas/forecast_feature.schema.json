@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.poc/schemas/forecast_feature.schema.json",
+  "title": "ForecastFeatureRecord",
+  "description": "Point-in-time-correct, model-ready feature row derived from one or more SignalRecords. schema_version 0.1.0 (POC).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "entity_key",
+    "forecast_cutoff",
+    "feature_definition_version",
+    "generated_at",
+    "contributing_signal_ids",
+    "schema_version"
+  ],
+  "properties": {
+    "entity_key": { "type": "string", "description": "Forecast grain key (e.g. customer-SKU); exact grain is OPEN, see 14-open-questions.md." },
+    "forecast_cutoff": { "type": "string", "format": "date-time", "description": "The point-in-time cutoff this row is valid for. No contributing signal may have available_at > this value." },
+    "feature_definition_version": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "contributing_signal_ids": { "type": "array", "items": { "type": "string" } },
+    "schema_version": { "type": "string", "const": "0.1.0" },
+
+    "has_active_signal_30d": { "type": ["boolean", "null"] },
+    "signal_count_30d": { "type": ["integer", "null"], "minimum": 0 },
+    "net_demand_direction_30d": { "type": ["string", "null"], "enum": ["INCREASE", "DECREASE", "STABLE", "MIXED", "UNKNOWN", null] },
+    "expected_qty_delta_next_horizon": { "type": ["number", "null"] },
+    "committed_qty": { "type": ["number", "null"] },
+    "cancelled_qty_30d": { "type": ["number", "null"] },
+    "delay_count_90d": { "type": ["integer", "null"], "minimum": 0 },
+    "nearest_effective_start_days": { "type": ["integer", "null"] },
+    "days_since_latest_signal": { "type": ["integer", "null"], "minimum": 0 },
+    "independent_source_count_30d": { "type": ["integer", "null"], "minimum": 0 },
+    "active_conflict_count": { "type": ["integer", "null"], "minimum": 0 },
+
+    "feature_available_at": { "type": ["string", "null"], "format": "date-time" },
+    "staleness_status": { "type": ["string", "null"], "enum": ["FRESH", "STALE", "UNKNOWN", null] }
+  }
+}
