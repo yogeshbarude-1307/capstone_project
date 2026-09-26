@@ -19,7 +19,7 @@
 
 | Note | Expected interpretation |
 |---|---|
-| "Customer is not increasing the order." | `direction=DECREASE` or `STABLE` is **wrong**; correct extraction recognizes the negated proposition and does **not** emit `direction=INCREASE`. Depending on final ontology mapping, expected output is `direction=STABLE` or `NA` with `negated=true`, never a positive assertion of increase. |
+| "Customer is not increasing the order." | Recognize the negated proposition; never assert `direction=INCREASE` or infer `DECREASE`. The rules baseline uses `direction=STABLE` with `negated=true` as an encoding of the denied increase, not evidence that all demand is unchanged; feature consumers must retain the negation flag. |
 | "Customer may increase volume if the promotion is approved." | `signal_type=DEMAND_EXPECTATION`, `direction=INCREASE`, `business_certainty=POSSIBLE`, `conditionality=CONDITIONAL`, `condition_text="if the promotion is approved"`. |
 | "Expected to increase orders next month." | `direction=INCREASE`, `business_certainty=EXPECTED`, `effective_start`/`effective_end` normalized to the month **after** `authored_at`, not the current wall-clock month. |
 | "Previous expansion plan has been cancelled." | A new signal referencing/superseding the earlier expansion signal via `supersedes_signal_id`/`related_signal_ids`; the original expectation must not remain silently `ACTIVE`. |
@@ -28,6 +28,13 @@
 Expected labels come from the annotation rules in `06-synthetic-data-design.md` / the schema in `03-data-model.md` — these five cases are asserted directly as unit tests against the extractor, independent of the larger D2 statistical evaluation.
 
 ## Leakage test design (`CONFIRMED` requirement)
+
+The reversal case is tested at two levels: a standalone reference without
+history remains `REVIEW`; a batch with a unique prior claim must link it and
+supersede it only once the reversal becomes available. Calendar-boundary tests
+cover month/year rollover and leap years. Ledger tests also check distinct
+revision identity and idempotent retries; quarantine tests deliberately inject
+an invalid output so rejection/persistence assertions cannot pass vacuously.
 
 An explicit adversarial test constructs notes with `available_at` deliberately **after** a chosen forecast cutoff and asserts they are absent from `get_historical_features(..., cutoff)`'s contributing signals for that cutoff. A second test asserts that a note with `effective_start` in the future but `available_at` before cutoff **is** correctly included — confirming the eligibility rule isn't overcorrected into rejecting legitimate early signals.
 

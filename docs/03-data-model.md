@@ -13,6 +13,14 @@ These are never collapsed. A raw note, its extracted interpretation, and the num
 
 ## Temporal model — five clocks (`CONFIRMED`)
 
+**Implementation convention (v0.2 baseline):** timestamps serialize in UTC;
+naive synthetic input means UTC. Effective intervals are half-open `[start,
+end)`. `available_at` lives on source evidence and is joined by physical
+`source_id` plus verified `source_revision`, not inferred from `extracted_at`.
+Offline historical replay reconstructs source knowledge at a cutoff; it does
+not claim that today's extractor ran in the past. `ledger_as_of` selects one
+explicit extraction run and derives supersession without mutating stored rows.
+
 | Clock | Meaning |
 |---|---|
 | `source_event_time` | When the underlying real-world business event happened (may be null/unknown). |

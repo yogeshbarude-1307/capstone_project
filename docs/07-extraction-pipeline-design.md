@@ -1,5 +1,41 @@
 # 07 — Extraction Pipeline Design
 
+## Current implementation — rules baseline v0.2.0
+
+The diagram below is the target design. The implemented path uses plain regex
+rules and exact matching of **supplied** entity mentions against canonical IDs.
+It does not run spaCy/statistical NER or a local LLM. Recognized deterministic
+cues can populate semantic fields; missing/conflicting cues and unresolved
+entities yield `NO_SIGNAL` or `REVIEW`. This is an explicit narrower baseline
+than the originally proposed rules+NER degradation path, to be measured on D2
+before deciding which additional extraction stage earns its complexity.
+
+Calendar phrases use half-open intervals: “next month” is the next calendar
+month, “next quarter” the next calendar quarter, and “next year” the next
+calendar year. Synthetic naive timestamps are interpreted as UTC; aware
+timestamps normalize to UTC. Unsupported phrases remain unnormalized.
+
+Every run is a complete corpus interpretation. Physical IDs include source
+revision, extractor/config version, and run ID; logical IDs retain the upstream
+source identity. Repeated appends of identical physical records are idempotent;
+different content under an existing ID is rejected before writing the batch.
+The JSONL store is single-writer, without multi-process transactions.
+
+Reconciliation considers only claims available when a reversal was authored.
+A unique eligible prior claim for the same entity and compatible signal type
+is linked with `supersedes_signal_id`; missing/ambiguous candidates remain
+`REVIEW`. Links never read generator truth. Raw ledger rows remain unchanged:
+`ledger_as_of` derives `SUPERSEDED` only once the reversal's source is available
+at the requested cutoff. A run ID is required so alternate interpretations are
+not counted together. Incremental cross-run reconciliation and near-duplicate
+event clustering are not implemented; Milestone 5 must define their treatment.
+
+Validation failures are appended beside the ledger to `*_rejected.jsonl`, with
+source evidence, run identity, error, stage, and rejected signal when available.
+Evidence references currently cover the whole note; fine-grained per-field
+grounding and semantic accuracy remain evaluation work, not proven outcomes.
+Enabling the unimplemented local-LLM stage fails explicitly.
+
 ## Pipeline stages (`CONFIRMED` shape, `PROPOSED` implementation)
 
 ```

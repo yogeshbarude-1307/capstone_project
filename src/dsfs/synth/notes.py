@@ -14,6 +14,7 @@ extraction pipeline (Milestone 3) or for D2 human annotation.
 from __future__ import annotations
 
 import hashlib
+import json
 import random
 import uuid
 from datetime import datetime, timedelta
@@ -78,8 +79,10 @@ def _sample_available_at(authored_at: datetime, config: GeneratorConfig, rng: ra
     return authored_at + timedelta(minutes=delay_minutes)
 
 
-def _new_source_id() -> str:
-    return f"EV-{uuid.uuid4().hex[:12]}"
+def _new_source_id(config: GeneratorConfig, ordinal: int, text: str, authored_at: datetime) -> str:
+    """Stable snapshot identity without consuming the note/demand random streams."""
+    identity = json.dumps([config.model_dump(mode="json"), ordinal, text, authored_at.isoformat()], sort_keys=True)
+    return "EV-" + uuid.uuid5(uuid.NAMESPACE_URL, identity).hex
 
 
 def generate_notes(
@@ -104,7 +107,6 @@ def generate_notes(
         for _ in range(n_notes):
             authored_at = _sample_authored_at(k.knowable_from, k.effective_start, rng)
             available_at = _sample_available_at(authored_at, config, rng)
-            source_id = _new_source_id()
 
             if use_negation:
                 text = templates.render_negation_note(
@@ -128,6 +130,7 @@ def generate_notes(
                 template_id = "standard"
                 negated = False
 
+            source_id = _new_source_id(config, len(evidence_rows), text, authored_at)
             evidence_rows.append(
                 SourceEvidence(
                     source_id=source_id,
@@ -165,10 +168,10 @@ def generate_notes(
         if rng.random() < config.reversal_probability:
             reversal_authored_at = k.effective_start + timedelta(days=rng.randint(1, 21))
             reversal_available_at = _sample_available_at(reversal_authored_at, config, rng)
-            reversal_source_id = _new_source_id()
             reversal_text = templates.render_reversal_note(
                 original_signal_type=k.signal_type, authored_at=reversal_authored_at, rng=rng
             )
+            reversal_source_id = _new_source_id(config, len(evidence_rows), reversal_text, reversal_authored_at)
             evidence_rows.append(
                 SourceEvidence(
                     source_id=reversal_source_id,
@@ -212,8 +215,8 @@ def generate_notes(
     for _ in range(n_irrelevant):
         authored_at = horizon_start + timedelta(days=rng.randint(0, horizon_days - 1))
         available_at = _sample_available_at(authored_at, config, rng)
-        source_id = _new_source_id()
         text = templates.render_irrelevant_note(rng)
+        source_id = _new_source_id(config, len(evidence_rows), text, authored_at)
 
         evidence_rows.append(
             SourceEvidence(

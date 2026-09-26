@@ -2,6 +2,14 @@
 
 All choices below satisfy the confirmed **offline/local-only** constraint: no hosted APIs, no cloud services, no network egress required by any component. Everything must run on a single local machine (assume CPU-only unless a local GPU is confirmed available — `OPEN`, see `14-open-questions.md`).
 
+**Implementation update (2026-09-26):** this matrix remains the proposed stack.
+The verified baseline uses regex (the listed alternative), supplied-mention
+matching, Pydantic/jsonschema, pandas/Parquet and JSONL. Statistical NER, local
+LLM, DuckDB/Pandera, forecasting and monitoring are not implemented. Runtime
+dependencies and optional future-stage extras are declared in `pyproject.toml`;
+`requirements-tested.txt` records the tested runtime/test versions. No GPU or
+local-model feasibility result has been claimed.
+
 | Component | POC choice | Why | Alternatives considered | Production alternative | Swap boundary |
 |---|---|---|---|---|---|
 | Language/runtime | Python 3.11+ | Matches the research's tooling recommendations (spaCy, Pandera, Pydantic, forecasting libs all Python-first) | R, Julia | Same, or polyglot services | N/A — whole POC is one language |

@@ -15,4 +15,14 @@ Per the handoff's stop-condition rule: none of these are guessed. Each is tagged
 | 9 | D2 gold-set target size (given actual annotation time available) | Milestone 4 statistical power | Project owner (time budget for a capstone) | Use the smaller end of the PROPOSED range (≈800 notes) and note the resulting confidence-interval width in reports |
 | 10 | Whether any existing tabular forecasting code/baseline exists to reuse, or D0/arm-A must be built from scratch | Milestone 7 effort | Project owner | Assume built from scratch as part of the synthetic generator; documented as a POC-only baseline, not a real company baseline |
 
-Nothing above blocks starting Milestone 1 (foundation) or Milestone 2 (synthetic data) — those depend only on decisions already CONFIRMED in this package. Items 1–2 must be resolved before Milestone 3 begins in earnest (though the degradation path means Milestone 3 can start with rules+NER regardless). Item 5 should ideally be resolved before Milestone 9, but its absence does not block running the experiment — only the final go/iterate/stop framing.
+**Implementation update (2026-09-26):** Milestones 1–2 and the narrower
+Milestone 3 rules baseline are verified (see `12-implementation-milestones.md`).
+Items 1–2 remain open; the current path is regex plus supplied-mention matching,
+without statistical NER or LLM. Item 3 uses a synthetic account grain; item 4
+has weekly D0 observations, but forecast horizons/cutoff semantics still need
+explicit experiment defaults before Milestone 5. Item 9 is the next practical
+dependency: D2's 40-note provisional starter and evaluation tooling are now
+implemented, but independent annotation/adjudication, a held-out set, and the
+final target size still need review (docs/15). Generator truth is not gold.
+Item 5 does not block running experiments; it limits the
+eventual go/iterate/stop framing.

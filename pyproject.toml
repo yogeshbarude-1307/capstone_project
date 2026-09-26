@@ -4,6 +4,27 @@ version = "0.1.0"
 description = "Demand Signal Feature Service — offline/local POC"
 requires-python = ">=3.11"
 readme = "README.md"
+dependencies = [
+    "pydantic>=2.10",
+    "pydantic-settings>=2.6",
+    "jsonschema>=4.23",
+    "pandas>=2.2",
+    "pyarrow>=17",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "numpy>=1.26"]
+ner = ["spacy>=3.7"]
+local-llm = ["transformers>=4.44", "torch>=2.3", "sentence-transformers>=3.0"]
+forecast = ["scikit-learn>=1.5", "statsmodels>=0.14", "xgboost>=2.1"]
+tables = ["duckdb>=1.1", "pandera>=0.20"]
+
+[project.scripts]
+dsfs-generate = "dsfs.synth.generator:main"
+dsfs-extract = "dsfs.extraction.pipeline:main"
+dsfs-evaluate = "dsfs.evaluation.pipeline:main"
+dsfs-features = "dsfs.features.pipeline:main"
+dsfs-forecast = "dsfs.forecast.pipeline:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

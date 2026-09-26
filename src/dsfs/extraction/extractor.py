@@ -4,12 +4,15 @@ insufficient rather than guessing (docs/07-extraction-pipeline-design.md).
 
 The local LLM stage (llm_stage.py) is intentionally NOT invoked here by
 default -- this function IS the current, documented degradation-path
-extractor (rules + NER only). See docs/14-open-questions.md item 1.
+extractor (regex + supplied-mention matching). Statistical NER and the local
+LLM are not implemented. See docs/07's current-implementation section.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
+from uuid import NAMESPACE_URL, uuid5
 
 from dsfs.extraction.entity_resolution import resolve_entities
 from dsfs.extraction.rules import (
@@ -18,6 +21,7 @@ from dsfs.extraction.rules import (
     detect_direction_and_negation,
     detect_magnitude,
     detect_time_window,
+    is_reversal,
 )
 from dsfs.extraction.signal_types import detect_signal_type
 from dsfs.models.signal_record import (
@@ -33,8 +37,8 @@ from dsfs.models.signal_record import (
 )
 from dsfs.models.source_evidence import SourceEvidence
 
-DEFAULT_EXTRACTOR_VERSION = "rules-ner-v0.1.0"
-DEFAULT_EXTRACTION_CONFIG_VERSION = "cfg-v0.1.0"
+DEFAULT_EXTRACTOR_VERSION = "rules-v0.2.0"
+DEFAULT_EXTRACTION_CONFIG_VERSION = "cfg-v0.2.0"
 
 _IMPACT_CHANNEL_BY_TYPE: dict[SignalType, ImpactChannel] = {
     SignalType.DEMAND_EXPECTATION: ImpactChannel.DEMAND,
@@ -99,13 +103,24 @@ def extract_signal(
             abstention_reasons.append("direction detected but signal type/subject unclear")
 
     impact_channel = _IMPACT_CHANNEL_BY_TYPE.get(signal_type, ImpactChannel.UNKNOWN)
+    if forecast_key is None and signal_type != SignalType.NO_SIGNAL:
+        validation_status = ValidationStatus.REVIEW
+        abstention_reasons.append("entity is ambiguous or unresolved")
+    if is_reversal(text):
+        validation_status = ValidationStatus.REVIEW
+        abstention_reasons.append("reversal requires an unambiguous prior signal")
     abstention_reason = "; ".join(abstention_reasons) if abstention_reasons else None
 
     evidence_ref = EvidenceRef(source_id=evidence.source_id, char_start=0, char_end=len(text))
 
     return SignalRecord(
-        signal_id=f"sig-{evidence.source_id}-r1",
-        logical_signal_id=f"sig-{evidence.source_id}",
+        signal_id="sig-" + uuid5(NAMESPACE_URL, json.dumps([
+            evidence.source_id, evidence.source_revision, extractor_version,
+            extraction_config_version, extraction_run_id,
+        ])).hex,
+        logical_signal_id="sig-" + uuid5(NAMESPACE_URL, json.dumps([
+            evidence.source_type.value, evidence.source_record_id,
+        ])).hex,
         source_id=evidence.source_id,
         source_revision=evidence.source_revision,
         signal_type=signal_type,

@@ -75,3 +75,42 @@ def test_no_signal_notes_correctly_abstain_rather_than_fabricate(full_corpus_not
         assert r.direction == Direction.NA
         assert r.magnitude_value is None
         assert r.abstention_reason is not None
+
+
+def test_quarantine_is_persisted_with_source_and_run(tmp_path, monkeypatch, known_entities):
+    import json
+    from dsfs.extraction import pipeline
+    from dsfs.extraction.extractor import extract_signal
+    from .conftest import make_evidence
+
+    evidence = make_evidence("bad", "Customer expects to increase orders.")
+    def malformed(*args, **kwargs):
+        # Bypass Pydantic deliberately to exercise the independent wire-contract gate.
+        return extract_signal(*args, **kwargs).model_copy(update={"schema_version": "invalid"})
+    monkeypatch.setattr(pipeline, "extract_signal", malformed)
+    result = pipeline.run_and_persist([evidence], known_entities, tmp_path / "ledger.jsonl", extraction_run_id="reject-run")
+    assert not result.accepted
+    assert len(result.quarantined) == 1
+    row = json.loads((tmp_path / "ledger_rejected.jsonl").read_text())
+    assert row["source_evidence"]["raw_text"] == evidence.raw_text
+    assert row["extraction_run_id"] == "reject-run"
+    assert row["rejected_record"]["schema_version"] == "invalid"
+    assert row["error"]
+
+
+def test_unresolved_entity_requires_review(known_entities):
+    from dsfs.models import ValidationStatus
+    from .conftest import make_evidence
+    note = make_evidence("unknown", "Customer expects to increase orders.", entity_mentions=["missing"])
+    signal = run_extraction([note], known_entities).accepted[0]
+    assert signal.forecast_key is None
+    assert signal.validation_status == ValidationStatus.REVIEW
+
+
+def test_cli_refuses_enabled_unimplemented_llm_before_writing(tmp_path):
+    from dsfs.config import Settings
+    from dsfs.extraction.pipeline import main
+    target = tmp_path / "should-not-exist"
+    with pytest.raises(NotImplementedError, match="Local LLM"):
+        main(Settings(llm_extraction_enabled=True, data_raw_dir=target))
+    assert not target.exists()

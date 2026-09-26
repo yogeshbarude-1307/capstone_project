@@ -13,7 +13,7 @@ Stages, in order:
                                     rules stage above IS the documented
                                     degradation path, not a placeholder
     extractor.py                -> orchestrates rules + entity resolution
-                                    (+ llm_stage if enabled) into one
+                                    into one
                                     SignalRecord, applying abstention where
                                     evidence is insufficient
     pipeline.py                 -> runs the extractor over a note corpus,
@@ -21,8 +21,10 @@ Stages, in order:
                                     canonical contract, and writes to the
                                     append-only local signal ledger
     ledger.py                   -> append-only local JSONL ledger writer
+    reconciliation.py           -> unique prior-claim reversal linking;
+                                    ambiguous references remain REVIEW
 
-No component here ever guesses a value it cannot point to in the source
-text -- see docs/07-extraction-pipeline-design.md "unsupported inference"
-and the abstention-first design principle.
+Statistical NER/local LLM are unimplemented. Enabling the LLM in the CLI
+raises explicitly. D2 evaluation is still needed to measure semantic accuracy
+and unsupported inference; whole-note evidence spans alone do not prove it.
 """

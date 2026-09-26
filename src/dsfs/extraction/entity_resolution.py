@@ -10,6 +10,6 @@ from __future__ import annotations
 
 
 def resolve_entities(mentions_raw: list[str], known_entities: set[str]) -> tuple[list[str], str | None]:
-    resolved = [m for m in mentions_raw if m in known_entities]
+    resolved = list(dict.fromkeys(m for m in mentions_raw if m in known_entities))
     forecast_key = resolved[0] if len(resolved) == 1 else None
     return resolved, forecast_key

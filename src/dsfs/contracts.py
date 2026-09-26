@@ -66,7 +66,7 @@ def _validator_for(contract_name: str) -> jsonschema.protocols.Validator:
     schema = load_schema(contract_name)
     validator_cls = jsonschema.validators.validator_for(schema)
     validator_cls.check_schema(schema)
-    return validator_cls(schema)
+    return validator_cls(schema, format_checker=jsonschema.FormatChecker())
 
 
 def validate_record(contract_name: str, record: dict[str, Any]) -> None:
