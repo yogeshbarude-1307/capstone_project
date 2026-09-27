@@ -16,6 +16,7 @@ out to say (see tests/synth/test_leakage.py).
 
 from __future__ import annotations
 
+import argparse
 import json
 import random
 from dataclasses import dataclass
@@ -111,9 +112,36 @@ def write_dataset(dataset: GeneratedDataset, raw_dir: Path) -> dict[str, Path]:
 
 
 def main(settings: Settings | None = None, config: GeneratorConfig | None = None) -> None:
-    settings = settings or get_settings()
-    config = config or GeneratorConfig()
+    if config is None:
+        parser = argparse.ArgumentParser(description="Generate synthetic D0/D1 dataset (Milestone 2)")
+        parser.add_argument(
+            "--paraphrase-entities",
+            choices=["none", "mild", "aggressive"],
+            default="none",
+            help="Entity mention realism for D1 notes (docs/16 Layer 2b). "
+                 "'none' renders the canonical entity_key verbatim (default). "
+                 "'mild'/'aggressive' render nicknames/pronouns/hierarchy references "
+                 "that the exact-string entity resolver cannot match, exercising Gate D.",
+        )
+        parser.add_argument(
+            "--drift-scenario",
+            choices=["none", "vocabulary_shift", "new_abbreviations", "source_type_mix_shift",
+                     "note_length_shift", "contradiction_rate_increase"],
+            default="none",
+            help="Seed a drift scenario (docs/10, Milestone 10 D4) starting at "
+                 "--drift-inject-at-week. Injection metadata lives in "
+                 "generator_config.json (drift_scenario/drift_inject_at_week), "
+                 "kept separate from d1_notes.jsonl.",
+        )
+        parser.add_argument("--drift-inject-at-week", type=int, default=0)
+        args = parser.parse_args()
+        config = GeneratorConfig(
+            entity_paraphrase_mode=args.paraphrase_entities,
+            drift_scenario=args.drift_scenario,
+            drift_inject_at_week=args.drift_inject_at_week,
+        )
 
+    settings = settings or get_settings()
     settings.ensure_dirs()
     dataset = generate_dataset(config)
     paths = write_dataset(dataset, settings.data_raw_dir)

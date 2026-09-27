@@ -17,7 +17,7 @@ Adapted directly from the Developer Handoff's own milestone list (Section 18), r
 | 6 | Complete | Feature access layer: `FeatureStore` with `get_features()` / `get_historical_features()`, `load_feature_store()` from persisted ledger + notes, CLI entry point `dsfs-features`. Raw text never returned. |
 | 7 | Complete | Rolling-origin forecast baseline (arm A): Ridge regression with lag/seasonal/rolling features, pure numpy (no sklearn). Frozen ForecastConfig enforces identical model config across arms. |
 | 8 | Complete | Enhanced arms B (oracle ground-truth features), C (extracted-signal features), D (shuffled control). Decision logic from docs/08 applied. Mandatory reporting caveat included. CLI `dsfs-forecast`. 20 tests cover rolling-origin correctness, config identity, metrics, shuffle alignment, and arm comparison. |
-| 9–12 | Not started | Next batch: controlled evaluation and ablations (9). |
+| 9–12 | Not started | Planned in [16-revised-execution-plan.md](16-revised-execution-plan.md), organized around the business gates from the Phase One research report. |
 
 Verification: **181 passing tests** on Windows/Python 3.14.4; the default
 generator-to-ledger smoke run accepted 675/675 schema-valid records. Tests
@@ -44,7 +44,7 @@ metric computations (MASE, MAE, bias, incremental lift), shuffled control
 (entity-time alignment broken, reproducible, lineage cleared), and arm
 comparison (B/C/D predictions differ from A).
 
-Next batch: implement Milestone 9 — controlled evaluation and ablation matrix.
+Next batch: Track A flaw fixes, Layer 2 extraction-validity additions (independent-review sample, entity-paraphrase stress test), then M9–M12. Detailed sequencing, acceptance criteria mapped to business gates, and dev-team-deviation review in [16-revised-execution-plan.md](16-revised-execution-plan.md).
 
 ### Milestone 0 — Research-to-development validation (this package)
 

@@ -20,6 +20,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import NamedTuple
 
+from dsfs.features.direction import direction_vote as _direction_vote
 from dsfs.models.common import as_utc
 from dsfs.models.forecast_feature import (
     ForecastFeatureRecord,
@@ -80,15 +81,6 @@ def _is_actionable(signal: SignalRecord) -> bool:
         and signal.validation_status in (ValidationStatus.PASS, ValidationStatus.REVIEW)
         and signal.signal_type != SignalType.NO_SIGNAL
     )
-
-
-def _direction_vote(direction: Direction, negated: bool) -> int:
-    """Return +1 for increase, -1 for decrease, 0 for neutral/unknown."""
-    if direction == Direction.INCREASE:
-        return -1 if negated else 1
-    if direction == Direction.DECREASE:
-        return 1 if negated else -1
-    return 0
 
 
 def _resolve_net_direction(votes: list[int]) -> NetDemandDirection:

@@ -21,6 +21,24 @@ import pandas as pd
 ArmLabel = Literal["A", "B", "C", "D"]
 
 
+def normalize_cutoff_column(signal_features: pd.DataFrame) -> pd.DataFrame:
+    """Normalize ``forecast_cutoff`` to a tz-naive midnight ``pd.Timestamp``.
+
+    ``forecast_cutoff`` arrives as an ISO-8601 string from
+    ``ForecastFeatureRecord.model_dump(mode="json")``; D0's ``period_start``
+    is a plain ``datetime.date``. Both must go through this normalization
+    (or the equivalent for D0, ``pd.to_datetime(...).dt.normalize()``)
+    before being compared — see ``run_arm``.
+    """
+    if signal_features is None or signal_features.empty:
+        return signal_features
+    out = signal_features.copy()
+    out["forecast_cutoff"] = (
+        pd.to_datetime(out["forecast_cutoff"], utc=True).dt.tz_localize(None).dt.normalize()
+    )
+    return out
+
+
 def _ridge_fit(
     X: np.ndarray, y: np.ndarray, alpha: float
 ) -> tuple[np.ndarray, float]:
@@ -54,6 +72,20 @@ class ForecastConfig:
     seasonal_period: int = 52
     random_state: int = 42
 
+    def __post_init__(self) -> None:
+        if not self.lag_weeks:
+            raise ValueError("lag_weeks must not be empty")
+        if any(l <= 0 for l in self.lag_weeks):
+            raise ValueError(f"lag_weeks must all be positive; got {self.lag_weeks}")
+        if list(self.lag_weeks) != sorted(self.lag_weeks):
+            raise ValueError(
+                f"lag_weeks must be sorted ascending; got {self.lag_weeks}"
+            )
+        if self.horizon_weeks <= 0:
+            raise ValueError(f"horizon_weeks must be positive; got {self.horizon_weeks}")
+        if self.train_weeks <= 0:
+            raise ValueError(f"train_weeks must be positive; got {self.train_weeks}")
+
 
 @dataclass
 class OriginResult:
@@ -64,6 +96,7 @@ class OriginResult:
     actual: float
     predicted: float
     arm: ArmLabel
+    origin_cutoff: object = None  # the forecast_cutoff used to key signal_features (docs/16 M9 segments)
 
 
 @dataclass
@@ -165,15 +198,25 @@ def run_arm(
     ``signal_features`` is a DataFrame with columns matching
     ForecastFeatureRecord fields, keyed by (entity_key, forecast_cutoff).
     Pass None for arm A (tabular-only).
+
+    ``forecast_cutoff`` arrives as an ISO-8601 string (produced by
+    ``ForecastFeatureRecord.model_dump(mode="json")`` in both the feature
+    store and the oracle builder), while D0's ``period_start`` is a plain
+    ``datetime.date``. Both are normalized to tz-naive midnight
+    ``pd.Timestamp`` once here so the per-origin merge keys actually match —
+    without this, arms B/C/D silently receive zero merged signal rows and
+    become numerically identical to arm A.
     """
     result = ArmResult(arm=arm, config=config)
     entities = sorted(d0["entity_key"].unique())
+
+    signal_features = normalize_cutoff_column(signal_features)
 
     for entity_key in entities:
         entity_data = d0[d0["entity_key"] == entity_key].sort_values("week_index")
         demand = entity_data["demand"].values
         week_indices = entity_data["week_index"].values
-        dates = entity_data["period_start"].values
+        dates = pd.to_datetime(entity_data["period_start"]).dt.normalize().values
         n = len(demand)
 
         demand_series = pd.Series(demand)
@@ -185,46 +228,49 @@ def run_arm(
             continue
 
         for origin_idx in range(first_origin, last_origin + 1):
-            train_features = []
-            train_targets = []
-
-            for t in range(config.lag_weeks[-1] + 4, origin_idx):
-                feats = _build_tabular_features(demand_series, t, config)
-                if feats is None:
-                    continue
-
-                if signal_features is not None and t < len(dates):
-                    cutoff_date = dates[t]
-                    feats = _merge_signal_features(feats, signal_features, entity_key, cutoff_date)
-
-                train_features.append(feats)
-                train_targets.append(demand[t])
-
-            if len(train_features) < 10:
+            pred_feats_base = _build_tabular_features(demand_series, origin_idx, config)
+            if pred_feats_base is None:
                 continue
+            if signal_features is not None:
+                pred_feats_base = _merge_signal_features(
+                    pred_feats_base, signal_features, entity_key, dates[origin_idx],
+                )
 
-            feature_names = sorted(train_features[0].keys())
-            X_train = np.array([[f.get(k, 0.0) for k in feature_names] for f in train_features])
-            y_train = np.array(train_targets)
-
-            coefs, intercept = _ridge_fit(X_train, y_train, config.ridge_alpha)
-
+            # Direct multi-horizon: one ridge head per h, trained on (features_at_t,
+            # demand[t+h]) pairs where both t and t+h are strictly before origin_idx —
+            # never a single one-step model reused across every horizon.
             for h in range(1, config.horizon_weeks + 1):
                 target_idx = origin_idx + h
                 if target_idx >= n:
                     break
 
-                pred_feats = _build_tabular_features(demand_series, origin_idx, config)
-                if pred_feats is None:
+                train_features = []
+                train_targets = []
+
+                for t in range(config.lag_weeks[-1] + 4, origin_idx - h + 1):
+                    target_t = t + h
+                    if target_t >= n:
+                        continue
+                    feats = _build_tabular_features(demand_series, t, config)
+                    if feats is None:
+                        continue
+
+                    if signal_features is not None and t < len(dates):
+                        feats = _merge_signal_features(feats, signal_features, entity_key, dates[t])
+
+                    train_features.append(feats)
+                    train_targets.append(demand[target_t])
+
+                if len(train_features) < 10:
                     continue
 
-                if signal_features is not None:
-                    cutoff_date = dates[origin_idx]
-                    pred_feats = _merge_signal_features(
-                        pred_feats, signal_features, entity_key, cutoff_date,
-                    )
+                feature_names = sorted(train_features[0].keys())
+                X_train = np.array([[f.get(k, 0.0) for k in feature_names] for f in train_features])
+                y_train = np.array(train_targets)
 
-                X_pred = np.array([pred_feats.get(k, 0.0) for k in feature_names])
+                coefs, intercept = _ridge_fit(X_train, y_train, config.ridge_alpha)
+
+                X_pred = np.array([pred_feats_base.get(k, 0.0) for k in feature_names])
                 predicted = float(X_pred @ coefs + intercept)
                 predicted = max(0.0, predicted)
 
@@ -235,6 +281,7 @@ def run_arm(
                     actual=float(demand[target_idx]),
                     predicted=predicted,
                     arm=arm,
+                    origin_cutoff=pd.Timestamp(dates[origin_idx]),
                 ))
 
     return result
@@ -279,6 +326,14 @@ class ExperimentMetrics:
 
 
 def evaluate_arm(arm_result: ArmResult, baseline_mae: float | None = None) -> ExperimentMetrics:
+    if len(arm_result.origins) == 0:
+        raise ValueError(
+            f"Arm {arm_result.arm!r} produced zero origins — nothing to evaluate. "
+            f"train_weeks/lag_weeks are likely too large relative to the dataset's "
+            f"n_weeks (got train_weeks={arm_result.config.train_weeks}, "
+            f"lag_weeks={arm_result.config.lag_weeks}). Silently returning NaN "
+            f"metrics here would hide a config/data-size mismatch."
+        )
     actuals = arm_result.actuals
     preds = arm_result.predictions
     mae = compute_mae(actuals, preds)

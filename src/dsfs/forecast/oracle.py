@@ -14,15 +14,9 @@ from pathlib import Path
 
 import pandas as pd
 
+from dsfs.features.direction import direction_vote as _direction_from_gt
+from dsfs.features.transformer import DEFAULT_STALENESS_THRESHOLD_DAYS
 from dsfs.models.forecast_feature import NetDemandDirection, StalenessStatus
-
-
-def _direction_from_gt(direction: str, negated: bool) -> int:
-    if direction == "INCREASE":
-        return -1 if negated else 1
-    if direction == "DECREASE":
-        return 1 if negated else -1
-    return 0
 
 
 def build_oracle_features(
@@ -46,7 +40,6 @@ def build_oracle_features(
     with notes_path.open(encoding="utf-8") as f:
         notes_raw = [json.loads(line) for line in f if line.strip()]
     note_available_at = {}
-    note_entity = {}
     for note in notes_raw:
         sid = note["source_id"]
         avail = note.get("available_at")
@@ -58,9 +51,6 @@ def build_oracle_features(
                 note_available_at[sid] = dt
             else:
                 note_available_at[sid] = avail
-        mentions = note.get("entity_mentions_raw", [])
-        if mentions:
-            note_entity[sid] = mentions[0]
 
     rows = []
     for cutoff in cutoffs:
@@ -77,8 +67,11 @@ def build_oracle_features(
                 if avail is None or avail > cutoff:
                     continue
 
-                gt_entity = note_entity.get(sid)
-                if gt_entity != entity_key:
+                # Entity linkage must come from the generator's own ground truth,
+                # never the rendered mention text (docs/08) — this is what keeps
+                # the oracle arm valid even when notes use paraphrased entity
+                # references (docs/16 Layer 2b).
+                if gt.get("entity_key") != entity_key:
                     continue
 
                 if gt.get("is_irrelevant", False):
@@ -157,7 +150,7 @@ def build_oracle_features(
                 "active_conflict_count": 1 if (has_up and has_down) else 0,
                 "feature_available_at": datetime.now(timezone.utc).isoformat(),
                 "staleness_status": (
-                    "FRESH" if days_since is not None and days_since <= 14
+                    "FRESH" if days_since is not None and days_since <= DEFAULT_STALENESS_THRESHOLD_DAYS
                     else "STALE" if days_since is not None
                     else "UNKNOWN"
                 ),

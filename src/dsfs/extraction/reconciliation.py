@@ -21,7 +21,8 @@ def reconcile_reversal(
         "reversal requires an unambiguous prior signal",
         "direction detected but signal type/subject unclear",
     }
-    if set((record.abstention_reason or "").split("; ")) - allowed_reasons:
+    reason_parts = {r for r in (record.abstention_reason or "").split("; ") if r}
+    if not reason_parts or reason_parts - allowed_reasons:
         return record
     # The referenced claim must have been available when the reversal was authored,
     # not merely by the time the entire batch happens to be processed.

@@ -9,6 +9,7 @@ or a local .env file, never a remote config service.
 
 from __future__ import annotations
 
+from functools import cache
 from pathlib import Path
 
 from pydantic import Field
@@ -38,5 +39,6 @@ class Settings(BaseSettings):
             d.mkdir(parents=True, exist_ok=True)
 
 
+@cache
 def get_settings() -> Settings:
     return Settings()

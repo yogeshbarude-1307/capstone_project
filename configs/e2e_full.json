@@ -1,0 +1,14 @@
+{
+  "generator": {
+    "seed": 42,
+    "n_entities": 40,
+    "n_weeks": 104
+  },
+  "forecast": {
+    "train_weeks": 52,
+    "horizon_weeks": 4,
+    "ablation": "full"
+  },
+  "lineage_sample_size": 20,
+  "evaluation_dataset": "data/annotations/d2_starter.json"
+}

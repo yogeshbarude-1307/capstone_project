@@ -6,6 +6,7 @@ defines and documents its own POC-only defaults."""
 from __future__ import annotations
 
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +15,28 @@ class GeneratorConfig(BaseModel):
     model_config = {"frozen": True}
 
     seed: int = 42
+
+    # --- Entity mention realism (docs/16 Layer 2b) ---
+    # "none" renders the canonical entity_key directly as the mention (current
+    # POC default; trivially exact-match resolvable). "mild" renders a fixed
+    # nickname per entity. "aggressive" additionally mixes in pronouns and
+    # hierarchy references, so entity_resolution's exact-string matcher is
+    # expected to abstain on most notes — this is the intended stress test,
+    # not a bug to fix here.
+    entity_paraphrase_mode: Literal["none", "mild", "aggressive"] = "none"
+
+    # --- Seeded drift scenarios (docs/10, Milestone 10 D4) ---
+    # Only text/metadata-level scenarios are implemented (confined to
+    # notes.py); direction_class_shift and concept_drift would require
+    # changing latent.py/demand.py, which are the most safety-critical,
+    # leakage-tested modules in the generator, and are deliberately left
+    # unimplemented rather than risking that invariant. See
+    # docs/16-revised-execution-plan.md.
+    drift_scenario: Literal[
+        "none", "vocabulary_shift", "new_abbreviations", "source_type_mix_shift",
+        "note_length_shift", "contradiction_rate_increase",
+    ] = "none"
+    drift_inject_at_week: int = 0
 
     # --- Entities / horizon (PROPOSED POC defaults; real grain is OPEN) ---
     n_entities: int = 40

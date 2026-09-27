@@ -25,6 +25,9 @@ dsfs-extract = "dsfs.extraction.pipeline:main"
 dsfs-evaluate = "dsfs.evaluation.pipeline:main"
 dsfs-features = "dsfs.features.pipeline:main"
 dsfs-forecast = "dsfs.forecast.pipeline:main"
+dsfs-lineage = "dsfs.lineage:main"
+dsfs-drift-report = "dsfs.drift.report:main"
+dsfs-run = "dsfs.orchestrate:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

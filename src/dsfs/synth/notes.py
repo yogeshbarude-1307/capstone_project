@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict
 
 from dsfs.models.signal_record import BusinessCertainty, Conditionality, Direction, SignalType
 from dsfs.models.source_evidence import SourceEvidence, SourceType
-from dsfs.synth import templates
+from dsfs.synth import drift, templates
 from dsfs.synth.config import GeneratorConfig
 from dsfs.synth.latent import HiddenState, Knowable
 
@@ -33,6 +33,47 @@ _SOURCE_TYPES = [
     SourceType.SUPPLIER_COMMENTARY,
     SourceType.SALES_COMMENTARY,
 ]
+
+# Fixed nickname pool for "mild"/"aggressive" entity_paraphrase_mode (docs/16
+# Layer 2b): a deterministic, human-readable stand-in for the canonical
+# entity_key, so the extraction pipeline's exact-string resolver is exercised
+# against realistic references instead of the database key itself.
+_NICKNAME_POOL = [
+    "Northgate", "Riverside", "Summit", "Harbor", "Cedar", "Union",
+    "Lakeside", "Meridian", "Brookfield", "Fairview", "Ashwood", "Crestline",
+]
+_HIERARCHY_PHRASES = [
+    "our largest account in that group",
+    "the account we discussed last week",
+    "that customer's regional team",
+    "the account from the renewal call",
+]
+_PRONOUN_PHRASES = ["they", "the customer", "the account"]
+
+
+def _nickname_for(entity_key: str) -> str:
+    idx = int(hashlib.sha256(entity_key.encode("utf-8")).hexdigest(), 16) % len(_NICKNAME_POOL)
+    return f"{_NICKNAME_POOL[idx]} Account"
+
+
+def _paraphrase_entity_mention(entity_key: str, mode: str, rng: random.Random) -> str:
+    """Render the entity mention a note would actually contain.
+
+    "none" returns entity_key verbatim (current POC default). "mild" always
+    substitutes a fixed nickname. "aggressive" additionally mixes in pronouns
+    and hierarchy references that entity_resolution's exact-string matcher
+    cannot resolve — the point of the stress test.
+    """
+    if mode == "none":
+        return entity_key
+    if mode == "mild":
+        return _nickname_for(entity_key)
+    choice = rng.choice(("nickname", "pronoun", "hierarchy"))
+    if choice == "nickname":
+        return _nickname_for(entity_key)
+    if choice == "pronoun":
+        return rng.choice(_PRONOUN_PHRASES)
+    return rng.choice(_HIERARCHY_PHRASES)
 
 
 class NoteGroundTruth(BaseModel):
@@ -46,6 +87,7 @@ class NoteGroundTruth(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     source_id: str
+    entity_key: str | None  # generator-truth linkage; independent of the rendered mention text
     event_id: str | None  # null for irrelevant/no-signal notes
     signal_type: SignalType
     direction: Direction
@@ -100,6 +142,11 @@ def generate_notes(
     evidence_rows: list[SourceEvidence] = []
     ground_truth_rows: list[NoteGroundTruth] = []
 
+    # Independent stream: switching entity_paraphrase_mode must never change
+    # which events/entities/magnitudes get generated, only how the mention is
+    # rendered — otherwise mode="none" vs "aggressive" runs aren't comparable.
+    rng_paraphrase = random.Random(config.seed + 1000)
+
     for k in knowables:
         n_notes = rng.randint(*config.notes_per_event_range)
         use_negation = k.direction == Direction.STABLE and rng.random() < 0.5
@@ -130,23 +177,31 @@ def generate_notes(
                 template_id = "standard"
                 negated = False
 
+            if drift.is_past_injection(authored_at.date(), config.start_date, config.drift_inject_at_week):
+                text = drift.apply_text_mutation(text, config.drift_scenario)
+                chosen_source_type = drift.choose_source_type(rng, _SOURCE_TYPES, config.drift_scenario)
+            else:
+                chosen_source_type = rng.choice(_SOURCE_TYPES)
+
             source_id = _new_source_id(config, len(evidence_rows), text, authored_at)
+            mention = _paraphrase_entity_mention(k.entity_key, config.entity_paraphrase_mode, rng_paraphrase)
             evidence_rows.append(
                 SourceEvidence(
                     source_id=source_id,
-                    source_type=rng.choice(_SOURCE_TYPES),
+                    source_type=chosen_source_type,
                     source_record_id=source_id,
                     source_revision="r1",
                     authored_at=authored_at,
                     available_at=available_at,
                     raw_text=text,
                     content_hash=_content_hash(text),
-                    entity_mentions_raw=[k.entity_key],
+                    entity_mentions_raw=[mention],
                 )
             )
             ground_truth_rows.append(
                 NoteGroundTruth(
                     source_id=source_id,
+                    entity_key=k.entity_key,
                     event_id=k.event_id,
                     signal_type=k.signal_type,
                     direction=k.direction,
@@ -165,29 +220,41 @@ def generate_notes(
                 )
             )
 
-        if rng.random() < config.reversal_probability:
+        reversal_probability = config.reversal_probability
+        if drift.is_past_injection(k.effective_start.date(), config.start_date, config.drift_inject_at_week):
+            reversal_probability = drift.effective_reversal_probability(
+                config.reversal_probability, config.drift_scenario,
+            )
+        if rng.random() < reversal_probability:
             reversal_authored_at = k.effective_start + timedelta(days=rng.randint(1, 21))
             reversal_available_at = _sample_available_at(reversal_authored_at, config, rng)
             reversal_text = templates.render_reversal_note(
                 original_signal_type=k.signal_type, authored_at=reversal_authored_at, rng=rng
             )
+            if drift.is_past_injection(reversal_authored_at.date(), config.start_date, config.drift_inject_at_week):
+                reversal_text = drift.apply_text_mutation(reversal_text, config.drift_scenario)
+                reversal_source_type = drift.choose_source_type(rng, _SOURCE_TYPES, config.drift_scenario)
+            else:
+                reversal_source_type = rng.choice(_SOURCE_TYPES)
             reversal_source_id = _new_source_id(config, len(evidence_rows), reversal_text, reversal_authored_at)
+            reversal_mention = _paraphrase_entity_mention(k.entity_key, config.entity_paraphrase_mode, rng_paraphrase)
             evidence_rows.append(
                 SourceEvidence(
                     source_id=reversal_source_id,
-                    source_type=rng.choice(_SOURCE_TYPES),
+                    source_type=reversal_source_type,
                     source_record_id=reversal_source_id,
                     source_revision="r1",
                     authored_at=reversal_authored_at,
                     available_at=reversal_available_at,
                     raw_text=reversal_text,
                     content_hash=_content_hash(reversal_text),
-                    entity_mentions_raw=[k.entity_key],
+                    entity_mentions_raw=[reversal_mention],
                 )
             )
             ground_truth_rows.append(
                 NoteGroundTruth(
                     source_id=reversal_source_id,
+                    entity_key=k.entity_key,
                     event_id=None,
                     signal_type=k.signal_type,
                     direction=Direction.STABLE,
@@ -216,24 +283,35 @@ def generate_notes(
         authored_at = horizon_start + timedelta(days=rng.randint(0, horizon_days - 1))
         available_at = _sample_available_at(authored_at, config, rng)
         text = templates.render_irrelevant_note(rng)
+        if drift.is_past_injection(authored_at.date(), config.start_date, config.drift_inject_at_week):
+            text = drift.apply_text_mutation(text, config.drift_scenario)
+            chosen_source_type = drift.choose_source_type(rng, _SOURCE_TYPES, config.drift_scenario)
+        else:
+            chosen_source_type = rng.choice(_SOURCE_TYPES)
         source_id = _new_source_id(config, len(evidence_rows), text, authored_at)
+        chosen_entity = rng.choice(entity_keys) if entity_keys else None
+        mention = (
+            _paraphrase_entity_mention(chosen_entity, config.entity_paraphrase_mode, rng_paraphrase)
+            if chosen_entity else None
+        )
 
         evidence_rows.append(
             SourceEvidence(
                 source_id=source_id,
-                source_type=rng.choice(_SOURCE_TYPES),
+                source_type=chosen_source_type,
                 source_record_id=source_id,
                 source_revision="r1",
                 authored_at=authored_at,
                 available_at=available_at,
                 raw_text=text,
                 content_hash=_content_hash(text),
-                entity_mentions_raw=[rng.choice(entity_keys)] if entity_keys else [],
+                entity_mentions_raw=[mention] if mention else [],
             )
         )
         ground_truth_rows.append(
             NoteGroundTruth(
                 source_id=source_id,
+                entity_key=chosen_entity,
                 event_id=None,
                 signal_type=SignalType.NO_SIGNAL,
                 direction=Direction.NA,

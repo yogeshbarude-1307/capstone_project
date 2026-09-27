@@ -1,0 +1,17 @@
+{
+  "generator": {
+    "seed": 1,
+    "n_entities": 3,
+    "n_weeks": 45,
+    "drift_scenario": "note_length_shift",
+    "drift_inject_at_week": 20
+  },
+  "forecast": {
+    "train_weeks": 40,
+    "horizon_weeks": 1,
+    "min_origins": 1,
+    "ablation": "full"
+  },
+  "lineage_sample_size": 5,
+  "evaluation_dataset": "data/annotations/d2_starter.json"
+}

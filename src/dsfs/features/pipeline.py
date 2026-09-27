@@ -9,22 +9,20 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timedelta, timezone
+import logging
+from datetime import timezone
 from pathlib import Path
 
 import pandas as pd
 
 from dsfs.config import Settings, get_settings
-from dsfs.contracts import validate_record
+from dsfs.contracts import ContractValidationError, validate_record
 from dsfs.features.access import load_feature_store
 from dsfs.features.transformer import DEFAULT_FEATURE_DEFINITION_VERSION
 from dsfs.synth.config import GeneratorConfig
 from dsfs.synth.entities import generate_entities
 
-
-def _weekly_cutoffs(start: datetime, n_weeks: int) -> list[datetime]:
-    """Generate Monday-aligned UTC cutoffs."""
-    return [start + timedelta(weeks=w) for w in range(n_weeks)]
+logger = logging.getLogger(__name__)
 
 
 def build_d3(
@@ -32,10 +30,10 @@ def build_d3(
     *,
     extraction_run_id: str,
     feature_definition_version: str = DEFAULT_FEATURE_DEFINITION_VERSION,
-) -> Path:
+) -> tuple[Path, int, int]:
     """Build the D3 feature dataset and write it as Parquet.
 
-    Returns the output path.
+    Returns ``(output_path, row_count, schema_failure_count)``.
     """
     ledger_path = settings.data_processed_dir / "signal_ledger.jsonl"
     notes_path = settings.data_raw_dir / "d1_notes.jsonl"
@@ -52,7 +50,7 @@ def build_d3(
     entities = generate_entities(config)
 
     d0 = pd.read_parquet(d0_path)
-    cutoff_dates = sorted(d0["week_start"].unique())
+    cutoff_dates = sorted(d0["period_start"].unique())
     cutoffs = [pd.Timestamp(c).to_pydatetime().replace(tzinfo=timezone.utc) for c in cutoff_dates]
 
     store = load_feature_store(
@@ -66,18 +64,30 @@ def build_d3(
     df = store.get_historical_features(pairs, feature_set_version=feature_definition_version)
 
     schema_failures = 0
-    for _, row in df.iterrows():
-        record = row.dropna().to_dict()
-        record["contributing_signal_ids"] = list(record.get("contributing_signal_ids", []))
+    for idx, row in df.iterrows():
+        record: dict = {}
+        for k, v in row.to_dict().items():
+            if isinstance(v, list):
+                record[k] = v
+            elif pd.isna(v):
+                record[k] = None
+            else:
+                record[k] = v
+        record["contributing_signal_ids"] = list(record.get("contributing_signal_ids") or [])
         try:
             validate_record("forecast_feature", record)
-        except Exception:
+        except ContractValidationError as exc:
             schema_failures += 1
+            logger.warning(
+                "D3 row %s failed forecast_feature contract: %s",
+                idx,
+                exc,
+            )
 
     output_path = settings.data_processed_dir / "d3_features.parquet"
     settings.data_processed_dir.mkdir(parents=True, exist_ok=True)
     df.to_parquet(output_path, index=False)
-    return output_path, len(df), schema_failures
+    return output_path, int(len(df)), schema_failures
 
 
 def main(settings: Settings | None = None) -> None:

@@ -52,8 +52,8 @@ class ExpectedSignal(ContractModel):
             raise ValueError("Abstentions require an annotation reason")
         if self.magnitude_value is not None and not self.magnitude_unit:
             raise ValueError("Annotated magnitude requires a unit")
-        if self.effective_start and self.effective_end and self.effective_end <= self.effective_start:
-            raise ValueError("Annotated interval must have positive duration")
+        if self.effective_start and self.effective_end and self.effective_end < self.effective_start:
+            raise ValueError("Annotated interval end must be on or after start")
         return self
 
 
