@@ -52,16 +52,35 @@ cloud storage, no external services.**
   access layer. Arm D: shuffled control (entity-time alignment broken, seeded).
   Decision logic from docs/08 applied automatically. Mandatory reporting caveat
   included. CLI via `dsfs-forecast --run-id <extraction_run_id>`.
-- **Milestones 9–12** — not started. Next batch: controlled evaluation and
-  ablations (milestone 9).
+- **Milestone 9** (controlled evaluation and ablations) — implemented at POC
+  scope. Ablation matrix (5 of 9 docs/08 rows; 4 documented as not implemented,
+  never fabricated), bootstrap CI, paired-permutation test, per-horizon and
+  signal-exposed-subset segmentation. `dsfs-forecast --ablation full`.
+- **Milestone 10** (lineage, freshness, drift) — implemented at POC scope.
+  Feature→signal→evidence lineage tracing, extraction-latency freshness,
+  5 of 7 docs/10 seeded drift scenarios, pure-numpy KS/chi-square detectors,
+  no-drift-window calibration, persistence-based alerting. `dsfs-lineage`,
+  `dsfs-drift-report`.
+- **Milestone 11** (end-to-end POC) — implemented. `dsfs-run` chains every
+  stage into one command producing a manifest with per-artifact and code
+  SHA-256 hashes.
+- **Milestone 12** (findings and production gap) — in progress; see
+  `docs/17-poc-findings.md` and `docs/18-production-gap.md`.
 
-Verification on Windows / Python 3.14.4: **181 tests passed**. A default
-D0/D1 → extraction run accepted all 675 records with zero schema rejections.
-This is **schema conformance, not extraction accuracy**. The vocabulary is still
-close to the generator templates; meaningful semantic scores require held-out,
-independently adjudicated D2 labels. See `docs/07-extraction-pipeline-design.md`
-for the baseline limitations and `docs/12-implementation-milestones.md` for
-remaining acceptance work.
+**Two critical bugs were found and fixed while implementing M9-M11** — both
+made prior forecast results on real (non-fixture) data meaningless: a
+`forecast_cutoff` dtype mismatch meant arms B/C/D never actually received
+merged signal features (numerically identical to arm A), and `build_d3`
+referenced a column name (`week_start`) that never existed in real D0 output.
+See `docs/13-risks-and-dependencies.md` for the full list.
+
+Verification on Windows / Python 3.14.4: **296 tests passed** (up from 181).
+A default D0/D1 → extraction run accepted all 675 records with zero schema
+rejections. This is **schema conformance, not extraction accuracy**. The
+vocabulary is still close to the generator templates; meaningful semantic
+scores require held-out, independently adjudicated D2 labels. See
+`docs/07-extraction-pipeline-design.md` for the baseline limitations and
+`docs/12-implementation-milestones.md` for remaining acceptance work.
 
 ## Layout
 
@@ -95,8 +114,15 @@ python -m dsfs.synth.generator
 python -m dsfs.extraction.pipeline
 python -m dsfs.evaluation.pipeline
 python -m dsfs.features.pipeline --run-id <extraction_run_id>
-python -m dsfs.forecast.pipeline --run-id <extraction_run_id>
+python -m dsfs.forecast.pipeline --run-id <extraction_run_id> --ablation full
+python -m dsfs.lineage --run-id <extraction_run_id>
+python -m dsfs.orchestrate --config configs/e2e_smoke.json
 ```
+
+`dsfs.orchestrate` (console script `dsfs-run`) chains every stage above into
+one command and writes `reports/manifest.json` with per-artifact and code
+SHA-256 hashes. Use `configs/e2e_full.json` for the default POC scale (40
+entities, 104 weeks) or `configs/e2e_smoke.json` for a fast (~15s) sanity check.
 
 `requirements.txt` installs the package itself and current runtime/test
 requirements. Optional `ner`, `local-llm`, `forecast`, and `tables` extras in
@@ -133,4 +159,6 @@ definitions, reviewer metadata, and the `--require-gold` gate.
 1. `docs/00-development-requirements-spec.md` — what/why, reconciled from five prior research passes.
 2. `docs/03-data-model.md` — the three-layer data model and the point-in-time eligibility rule (the single most important correctness constraint in the project).
 3. `docs/08-forecasting-experiment-design.md` — the 4-arm experiment that answers the actual business hypothesis.
-4. `docs/14-open-questions.md` — what's still unresolved and who resolves it.
+4. `docs/17-poc-findings.md` — what the POC actually found, from a real full-scale run.
+5. `docs/18-production-gap.md` — what's missing before any production claim.
+6. `docs/14-open-questions.md` — what's still unresolved and who resolves it.

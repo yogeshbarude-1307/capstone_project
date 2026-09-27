@@ -4,7 +4,7 @@ Snapshot of what's done and what's left against the plan in
 [16-revised-execution-plan.md](16-revised-execution-plan.md). Written so work can
 resume cold in a future session without re-deriving status from git history.
 
-## Done (PRs #1–6, verified green)
+## Done (PRs #1–8) — all code and documentation complete
 
 | PR | Scope | Status |
 |---|---|---|
@@ -14,8 +14,10 @@ resume cold in a future session without re-deriving status from git history.
 | #4 | M9 ablation matrix + statistics | Done, tested |
 | #5 | M10a lineage + freshness + D4 drift-scenario generator | Done, tested |
 | #6 | M10b drift detectors + calibration + alerting + report | Done, tested |
+| #7 | M11 end-to-end orchestrator + smoke test | Done, tested |
+| #8 | M12 findings + production-gap docs, populated from real runs | Done |
 
-**291 tests passing** as of PR #6 close (baseline was 181 at session start).
+**297 tests passing** (baseline was 181 at session start).
 
 ### Bugs found and fixed along the way (beyond the original review list)
 
@@ -26,8 +28,8 @@ existing code and confirmed empirically against real generated data, not fixture
    `signal_features.forecast_cutoff` is an ISO string; D0's `period_start` is a
    `datetime.date`. They never compared equal, so **arms B/C/D silently received zero
    merged signal features in every real run** — numerically identical to arm A. Fixed
-   with `normalize_cutoff_column()`. **Any forecast report generated before this fix is
-   invalid and must be re-run.**
+   with `normalize_cutoff_column()`. Any forecast report generated before this fix was
+   invalid; re-run confirmed in `docs/17-poc-findings.md`.
 2. **`build_d3` referenced a nonexistent `week_start` column** ([features/pipeline.py](../src/dsfs/features/pipeline.py))
    — real D0 only has `period_start`. `dsfs-features` had never worked on real
    generated data.
@@ -36,79 +38,64 @@ existing code and confirmed empirically against real generated data, not fixture
 4. **`evaluate_arm` silently returned NaN metrics** when `train_weeks`/`lag_weeks`
    were too large relative to `n_weeks` (zero origins produced) — now raises a clear
    `ValueError` naming the likely cause instead of propagating NaN downstream.
+5. **Ablation report's bootstrap lift mixed signed and absolute error arrays**
+   ([forecast/pipeline.py](../src/dsfs/forecast/pipeline.py)) — arm A's baseline errors
+   were signed (`actuals - predictions`) while every ablation row's errors were
+   absolute (`np.abs(...)`), producing nonsensical lift percentages in the thousands
+   (found while writing `docs/17-poc-findings.md` from a real full-scale run). Fixed;
+   also removed a redundant full ablation-matrix recomputation the report was doing
+   just to extract one row it had already computed.
 
-## Done (PR #7 — M11 orchestrator)
+## M11 orchestrator details (PR #7)
 
 - [src/dsfs/orchestrate.py](../src/dsfs/orchestrate.py) — chains synth → extraction →
   evaluation → features → forecast(+ablation) → drift → lineage into one run,
-  producing `manifest.json` with per-artifact SHA-256 and code SHA-256.
+  producing `manifest.json` (per-artifact SHA-256, code SHA-256) and a persisted
+  `reports/lineage/lineage_sample.md` (closes output (f) from
+  `docs/00-development-requirements-spec.md` §6 as a file artifact like the others).
 - [configs/e2e_smoke.json](../configs/e2e_smoke.json), [configs/e2e_full.json](../configs/e2e_full.json).
-- [tests/test_e2e_smoke.py](../tests/test_e2e_smoke.py) — 3 tests: full artifact
-  production, manifest JSON validity, and schema-failure abort behavior.
 - New console script `dsfs-run`.
 - The initial smoke config was too heavy (`n_weeks=80` × `--ablation full` × 3 tests
   took 280s+); trimmed to `n_entities=3, n_weeks=45, horizon_weeks=1, min_origins=1`
-  (added `min_origins` passthrough in the orchestrator) — full smoke run now ~11s.
+  — full smoke run now ~11s.
+- **Known scaling characteristic, not a bug:** the direct multi-horizon fix (PR #2)
+  retrains a fresh ridge model per origin per horizon. At full POC scale (40 entities,
+  104 weeks, `train_weeks=52`, `horizon_weeks=4`, `--ablation full`), a complete
+  `dsfs-run` took **129 minutes**; a 10-entity version of the same temporal config took
+  24 minutes. Fine for a POC's occasional full run; would need batching/vectorizing the
+  per-origin retraining loop before any more frequent (e.g. CI) use at full scale.
 
-**Full suite: 296 passed** (up from 291 at PR #6 close; +2 `evaluate_arm` regression
-tests, +3 e2e smoke tests), full run in ~49s.
+## M12 findings (PR #8) — real numbers, not invented
 
-## Not started (PR #8 — M12 findings + production gap)
-
-Per [16-revised-execution-plan.md](16-revised-execution-plan.md), this is pure
-documentation, no new code:
-
-### `docs/17-poc-findings.md` (new)
-Must be populated from a **real `dsfs-run --config configs/e2e_full.json`** output
-(the manifest + forecast/ablation/drift reports it produces), not invented numbers:
-1. Which gates the POC addressed (C, D, E, F, G, I) vs. did not (A, B, H), and why.
-2. Results per success layer:
-   - Signal validity — planted by construction, not measured.
-   - Extraction validity — self-scored D2 (`d2_starter.json`) macro-F1, **plus** the
-     independent human-review result if L2a labeling happened (see below) — or an
-     explicit statement that it did not.
-   - Forecast value — decision-logic branch fired, CIs, per-horizon/per-ablation
-     table from the M9 ablation report.
-   - Operational value — lineage completeness rate, freshness distributions, drift
-     detection rate + calibrated false-alert rate + latency per scenario.
-3. Decision-logic branch fired, stated in one bold line.
-4. Mandatory caveat from [09-evaluation-plan.md](09-evaluation-plan.md), verbatim.
-
-### `docs/18-production-gap.md` (new)
-Extends [01-poc-scope-and-non-goals.md](01-poc-scope-and-non-goals.md) with observed
-results. Priority-ordered gaps (from doc 16):
-1. Real-corpus prevalence/lead-time study (Gate A, B).
-2. Entity master-data resolution at production scale (Gate D) — cite the
-   `entity_resolution_paraphrase` test results as the POC-scale evidence.
-3. Human-gold annotation program (Gate C at production quality).
-4. Business-decision impact study (Gate H).
-5. Extraction beyond rules — NER/local-LLM feasibility per [05-technology-decision-matrix.md](05-technology-decision-matrix.md).
-6. Real-time/batch serving decision.
-
-### Other doc updates bundled into PR #8
-- [12-implementation-milestones.md](12-implementation-milestones.md) — mark M9–M12
-  Complete in the status table.
-- [13-risks-and-dependencies.md](13-risks-and-dependencies.md) — annotate with the
-  four bugs found above as realized risks, not just hypothetical ones.
-- [14-open-questions.md](14-open-questions.md) — mark what M11 resolved, what's still open.
-- [README.md](../README.md) — update status section (milestone count, test count).
+- [docs/17-poc-findings.md](17-poc-findings.md) — populated from an actual full-scale
+  `dsfs-run` (40 entities, 104 weeks) plus a corrected 10-entity ablation re-run (see
+  bug #5 above) and dedicated entity-paraphrase/drift tests at POC scale.
+  **Headline result: decision-logic branch B ≈ A** — even the oracle arm (bypassing
+  extraction entirely) did not beat the tabular baseline at default configuration.
+  Reported honestly, not reframed.
+- [docs/18-production-gap.md](18-production-gap.md) — priority-ordered gaps, including
+  a POC-scale entity-resolution measurement (100% recall → 0% recall the moment notes
+  use pronouns/nicknames instead of literal entity keys) and a concrete, narrowed next
+  step from the ablation matrix (the `effective_time` feature group, not the whole
+  representation, is where both arms' loss concentrates).
+- [docs/12](12-implementation-milestones.md), [docs/13](13-risks-and-dependencies.md),
+  [docs/14](14-open-questions.md), [README.md](../README.md) updated to reflect M9-M12
+  complete and the realized risks found along the way.
 
 ## Outside code entirely (manual task, not blocked on implementation)
 
 - **L2a independent human review** ([docs/annotations/human_review_instructions.md](annotations/human_review_instructions.md)) —
-  someone other than the extractor's author must label the 50-note sample from
-  `scripts/select_review_sample.py`. Nothing in PR #8 should claim this happened
-  unless it actually did; if it didn't, M12 must say so plainly and Gate C stays
-  self-scored only.
+  the scaffold (`scripts/select_review_sample.py`) is built and tested, but the actual
+  labeling by a second person (not the extractor's author) was **not completed this
+  session** — no second reviewer was available. `docs/17-poc-findings.md` and
+  `docs/18-production-gap.md` both state this plainly: Gate C (extraction validity)
+  remains self-scored only (macro-F1 0.4158 on the 40-note provisional D2 starter).
+  This is the top open item if the project continues.
 
-## Sequencing to finish
+## Everything else
 
-```
-1. Re-verify PR #7 full suite green (in progress at time of writing)
-2. Commit + push PR #1-7 (this session's request)
-3. Run dsfs-run --config configs/e2e_full.json for real M12 source numbers
-4. (Optional, manual) L2a human review labeling
-5. Write docs/17-poc-findings.md + docs/18-production-gap.md from step 3's output
-6. Update docs/12, docs/13, docs/14, README.md
-7. Commit + push PR #8
-```
+No other implementation work is queued. Remaining next steps are the ones
+`docs/18-production-gap.md` lists as gaps requiring either real data access (gaps 1-4)
+or a person's time (the human review above, or the feature-scaling/ridge-alpha
+experiments in gap 5) — none of them are more code to write in this repo's current
+synthetic-POC scope.

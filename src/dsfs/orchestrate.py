@@ -163,6 +163,17 @@ def run_e2e(settings: Settings, run_config: dict) -> dict:
         "n_traced": len(lineage_traces),
         "n_complete": sum(t.is_complete for t in lineage_traces),
     }
+    lineage_report_path = report_dir.parent / "lineage" / "lineage_sample.md"
+    lineage_report_path.parent.mkdir(parents=True, exist_ok=True)
+    lineage_lines = ["# Lineage Sample (Milestone 10/11)", ""]
+    for t in lineage_traces:
+        lineage_lines.append(f"## {t.entity_key} @ {t.forecast_cutoff} "
+                              f"({len(t.signals)}/{len(t.contributing_signal_ids)} signals resolved)")
+        for s in t.signals:
+            lineage_lines.append(f"- signal={s.signal_id} source={s.source_id} span={s.evidence_span!r}")
+        lineage_lines.append("")
+    lineage_report_path.write_text("\n".join(lineage_lines), encoding="utf-8")
+    _record("lineage_sample", lineage_report_path)
 
     manifest["finished_at"] = datetime.now(timezone.utc).isoformat()
     return manifest

@@ -34,6 +34,7 @@ def test_e2e_smoke_config_completes_and_produces_every_artifact(smoke_settings: 
         "d0_demand", "d1_notes", "d1_ground_truth", "generator_config",
         "signal_ledger", "extraction_evaluation_report", "d3_features",
         "forecast_report", "forecast_ablation_report", "drift_report",
+        "lineage_sample",
     }
     assert expected_artifacts.issubset(manifest["artifacts"])
 

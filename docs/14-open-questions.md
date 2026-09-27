@@ -26,3 +26,11 @@ implemented, but independent annotation/adjudication, a held-out set, and the
 final target size still need review (docs/15). Generator truth is not gold.
 Item 5 does not block running experiments; it limits the
 eventual go/iterate/stop framing.
+
+**Implementation update (2026-09-27):** M9–M11 implemented (see
+`16-revised-execution-plan.md`). Two additional practical questions surfaced:
+
+| # | Open question | Affects | Who resolves it | If unresolved |
+|---|---|---|---|---|
+| 11 | Whether a second team member (not the extractor's author) can label the 50-note independent-review sample (`scripts/select_review_sample.py`, `docs/annotations/human_review_instructions.md`) | Extraction validity (Gate C) being independently verified vs. self-scored only | Project team / capstone timeline | M12 states Gate C was not independently evaluated; the provisional D2 macro-F1 stands alone |
+| 12 | Whether the ablation matrix's 4 not-implemented rows (business_certainty/conditionality features, aggregate-only cross-entity features, rules-vs-NER-vs-LLM, decayed/windowed weighting) are worth building for this capstone, or stay as documented production gaps | M9 completeness | Project owner | Left as documented gaps in `evaluation/ablation.py:NOT_IMPLEMENTED`, not fabricated |

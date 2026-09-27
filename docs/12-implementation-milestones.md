@@ -4,26 +4,30 @@ Adapted directly from the Developer Handoff's own milestone list (Section 18), r
 
 ---
 
-## Verified implementation status — 2026-09-26
+## Verified implementation status — 2026-09-27
 
 | Milestone | Status | Evidence / remaining work |
 |---|---|---|
 | 0 | Complete | Numbered designs and canonical schemas present; status reconciled with code. |
 | 1 | Complete for source-checkout workflow | Missing models restored; contract validation and UTC handling tested. Dependency snapshot recorded. Fresh editable installation still needs verification where build tooling is available. |
-| 2 | Complete at POC default scale | 4,160 D0 rows and 675 D1 notes; deterministic source IDs, notes, and demand; no rendered-text dependency in demand realization. |
+| 2 | Complete at POC default scale | 4,160 D0 rows and 675 D1 notes; deterministic source IDs, notes, and demand; no rendered-text dependency in demand realization. Entity-paraphrase and 5 seeded D4 drift scenarios added (`--paraphrase-entities`, `--drift-scenario`). |
 | 3 | Rules baseline verified; hybrid stages deferred | Regex + supplied-mention matching, schema validation, persisted quarantine, immutable revision IDs, conservative reversal linking, historical status reconstruction. Statistical NER/local LLM remain unimplemented. |
-| 4 | Evaluation machinery implemented; human gold pending | 40 provisional development cases, annotation/split validation, metric tests, diagnostics, and reproducible reports. Independent adjudication and held-out D2 results remain outstanding. |
-| 5 | Complete | PIT-correct feature transformation: weekly cutoffs, 28-day horizon, 30/90-day lookbacks, direction/magnitude/conflict/staleness aggregation, schema-validated output. 39 new tests cover PIT eligibility, leakage, window boundaries, aggregation, and contract conformance. |
+| 4 | Evaluation machinery implemented; independent-review scaffold added, labeling pending | 40 provisional development cases, annotation/split validation, metric tests, diagnostics, and reproducible reports. `scripts/select_review_sample.py` + `docs/annotations/human_review_instructions.md` add an independent 50-note review scaffold (reuses existing M4 machinery, no new scoring code) — labeling itself is a manual task, status in `19-remaining-implementation.md`. |
+| 5 | Complete | PIT-correct feature transformation: weekly cutoffs, 28-day horizon, 30/90-day lookbacks, direction/magnitude/conflict/staleness aggregation, schema-validated output. **`build_d3` referenced a nonexistent `week_start` column and had never worked on real generated data — fixed 2026-09-27.** |
 | 6 | Complete | Feature access layer: `FeatureStore` with `get_features()` / `get_historical_features()`, `load_feature_store()` from persisted ledger + notes, CLI entry point `dsfs-features`. Raw text never returned. |
-| 7 | Complete | Rolling-origin forecast baseline (arm A): Ridge regression with lag/seasonal/rolling features, pure numpy (no sklearn). Frozen ForecastConfig enforces identical model config across arms. |
-| 8 | Complete | Enhanced arms B (oracle ground-truth features), C (extracted-signal features), D (shuffled control). Decision logic from docs/08 applied. Mandatory reporting caveat included. CLI `dsfs-forecast`. 20 tests cover rolling-origin correctness, config identity, metrics, shuffle alignment, and arm comparison. |
-| 9–12 | Not started | Planned in [16-revised-execution-plan.md](16-revised-execution-plan.md), organized around the business gates from the Phase One research report. |
+| 7 | Complete | Rolling-origin forecast baseline (arm A): Ridge regression with lag/seasonal/rolling features, pure numpy (no sklearn). Frozen ForecastConfig enforces identical model config across arms. Direct multi-horizon (one ridge head per horizon) replaces the earlier one-step-reused-for-every-horizon bug. |
+| 8 | Complete | Enhanced arms B (oracle ground-truth features), C (extracted-signal features), D (shuffled control). Decision logic from docs/08 applied, restructured to always show all branches. **A `forecast_cutoff` dtype mismatch (ISO string vs. `datetime.date`) meant arms B/C/D silently received zero merged signal features on every real run before 2026-09-27 — any forecast report from before that date is invalid.** |
+| 9 | Complete at POC scope | Ablation matrix (5 of 9 docs/08 rows; 4 explicitly documented as not implemented, not fabricated), bootstrap CI, paired-permutation test, per-horizon and signal-exposed-subset segmentation. `dsfs-forecast --ablation full`. |
+| 10 | Complete at POC scope | Lineage tracing (feature → signal → evidence), extraction-latency freshness measurement, 5 of 7 docs/10 drift scenarios, pure-numpy KS/chi-square detectors, no-drift-window calibration, persistence-based alerting, per-scenario drift report. `dsfs-lineage`, `dsfs-drift-report`. |
+| 11 | Complete | `dsfs-run` orchestrates synth → extraction → evaluation → features → forecast(+ablation) → drift → lineage in one command, producing a manifest with per-artifact and code SHA-256. End-to-end smoke test against real generated data. |
+| 12 | Complete | `17-poc-findings.md` (from a real full-scale `dsfs-run`; decision-logic branch fired is B ≈ A) and `18-production-gap.md`, both populated from actual run output, not invented numbers. |
 
-Verification: **181 passing tests** on Windows/Python 3.14.4; the default
-generator-to-ledger smoke run accepted 675/675 schema-valid records. Tests
-cover calendar boundaries, later cancellation availability, ambiguous targets,
-distinct re-extraction IDs, idempotent ledger retries, and rejected-record
-persistence. This does not establish the original hybrid pipeline's accuracy.
+Verification: **296 passing tests** on Windows/Python 3.14.4 (up from 181 at the
+start of the M9-M11 implementation pass). The default generator-to-ledger smoke
+run accepted 675/675 schema-valid records. Tests cover calendar boundaries,
+later cancellation availability, ambiguous targets, distinct re-extraction IDs,
+idempotent ledger retries, and rejected-record persistence. This does not
+establish the original hybrid pipeline's accuracy.
 
 Milestone 4 adds 31 tests covering hand-built confusion sets, missing/duplicate
 outputs, abstention, citation grounding, temporal overlap, provenance/split
@@ -42,9 +46,20 @@ Milestones 7–8 add 20 tests covering rolling-origin correctness (no future
 leakage in training), config identity (frozen config shared across all arms),
 metric computations (MASE, MAE, bias, incremental lift), shuffled control
 (entity-time alignment broken, reproducible, lineage cleared), and arm
-comparison (B/C/D predictions differ from A).
+comparison. **Note:** the original "B/C/D predictions differ from A" claim was
+only ever exercised against a hand-built test fixture where both sides of a
+date comparison happened to be `pd.Timestamp`; on real generated data the
+comparison silently failed and arms B/C/D were identical to A until the
+2026-09-27 fix (see Milestone 8 row above and `13-risks-and-dependencies.md`).
 
-Next batch: Track A flaw fixes, Layer 2 extraction-validity additions (independent-review sample, entity-paraphrase stress test), then M9–M12. Detailed sequencing, acceptance criteria mapped to business gates, and dev-team-deviation review in [16-revised-execution-plan.md](16-revised-execution-plan.md).
+Milestones 9-11 add 65 tests: ablation matrix and masking correctness,
+bootstrap/permutation statistics, segmentation, lineage round-trip against real
+extraction output, freshness distributions, 5 seeded drift scenarios, KS/chi-square
+detectors, no-drift-window calibration, persistence-based alerting, and a
+full end-to-end smoke test.
+
+Next: Milestone 12 findings report and production-gap assessment — see
+`17-poc-findings.md`, `18-production-gap.md`, and `19-remaining-implementation.md`.
 
 ### Milestone 0 — Research-to-development validation (this package)
 

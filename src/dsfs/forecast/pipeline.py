@@ -211,7 +211,7 @@ def _format_ablation_report(data: ExperimentData) -> str:
     signal actually carries the lift, for arms B (oracle) and C (extracted).
     """
     a_mae = data.metrics["A"].mae
-    a_errors = data.arm_results["A"].actuals - data.arm_results["A"].predictions
+    a_errors = np.abs(data.arm_results["A"].actuals - data.arm_results["A"].predictions)
 
     lines = [
         "# Forecast Ablation Matrix (Milestone 9)",
@@ -228,6 +228,10 @@ def _format_ablation_report(data: ExperimentData) -> str:
         results = run_ablation_matrix(
             data.d0, data.config, signal_features, arm_label=arm_label, baseline_result=data.arm_results["A"],
         )
+        # The "full" ablation applies no masking, so it is identical by
+        # construction to the already-computed top-level arm result — reuse
+        # it instead of re-running the harness for the same numbers twice.
+        results["full"] = data.arm_results[arm_label]
         lines.extend([
             f"## Arm {arm_label} ({'oracle' if arm_label == 'B' else 'extracted'})",
             "",
@@ -257,9 +261,8 @@ def _format_ablation_report(data: ExperimentData) -> str:
         "## Segment breakdowns (arm C, full ablation)",
         "",
     ])
-    full_c = run_ablation_matrix(
-        data.d0, data.config, data.extracted_features, arm_label="C", baseline_result=data.arm_results["A"],
-    )["full"]
+    # Identical to the "full" row already reported above for arm C.
+    full_c = data.arm_results["C"]
     horizons = per_horizon(full_c.origins)
     if horizons:
         lines.extend(["| Horizon (weeks) | MAE | Origins |", "|---:|---:|---:|"])

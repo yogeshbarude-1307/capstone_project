@@ -18,6 +18,20 @@ Consolidated and deduplicated from all five source research documents, filtered 
 | Drift monitors too noisy (constant false alerts) or too slow (miss seeded shifts) | Monitoring demonstration unconvincing | Calibration-on-no-drift-window requirement + persistence-based alerting (`10-drift-monitoring-plan.md`) |
 | Local compute/runtime limits (no GPU, limited RAM) | Slower iteration, may force the degraded extraction path | Named explicitly as OPEN; architecture is designed to tolerate the degraded path without invalidating the rest of the experiment |
 
+## Realized risks (found during M9-M11 implementation, 2026-09-27)
+
+These moved from "risk" to "confirmed defect" while building on top of the existing
+milestone-1-8 code. Full detail in [16-revised-execution-plan.md](16-revised-execution-plan.md)
+and [19-remaining-implementation.md](19-remaining-implementation.md).
+
+| Realized risk | Consequence | Resolution |
+|---|---|---|
+| `forecast_cutoff` dtype mismatch between the feature store's ISO-string output and D0's `datetime.date` | Arms B/C/D silently received zero merged signal features in every real (non-fixture) run — numerically identical to arm A. **Any forecast report produced before 2026-09-27 on real generated data is invalid and must be re-run.** | `normalize_cutoff_column()` in `forecast/harness.py`; regression test reproduces the exact real-world dtype pairing |
+| `build_d3` referenced a nonexistent `week_start` column (real D0 only has `period_start`) | `dsfs-features` had never worked end-to-end on real generated data; only fixture-based unit tests passed | Column name fixed; added a true generate→extract→build_d3 integration test |
+| `evaluate_arm` silently returned NaN metrics when `train_weeks`/`lag_weeks` were too large relative to `n_weeks` | A misconfigured experiment would report NaN forecast results without any error, easy to miss in a report | Now raises a `ValueError` naming the likely cause |
+| Non-ASCII `≈` in report text crashed on Windows cp1252 console | `dsfs-forecast` unusable on a default Windows terminal | Reverted to ASCII |
+| One-step ridge model was reused unchanged across every forecast horizon (`horizon_weeks > 1` produced identical predictions for every h) | Per-horizon forecast results were meaningless for any multi-week horizon | Implemented direct multi-horizon: one ridge head trained per horizon |
+
 ## Deferred (production-only) risks — documented, not mitigated in this POC
 
 Real-note confidentiality/PII exposure; extractor-version rollback and reprocessing at scale; production SLA/freshness guarantees against a real forecast cadence; human-review workflow at volume; authentication/authorization for a real network-facing service; cost/capacity planning against real vendor pricing (moot while offline); supply-chain review of any locally-hosted model weights before production use; governance/retention policy for real business notes.
