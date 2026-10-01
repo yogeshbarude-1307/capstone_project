@@ -64,8 +64,13 @@ cloud storage, no external services.**
 - **Milestone 11** (end-to-end POC) — implemented. `dsfs-run` chains every
   stage into one command producing a manifest with per-artifact and code
   SHA-256 hashes.
-- **Milestone 12** (findings and production gap) — in progress; see
-  `docs/17-poc-findings.md` and `docs/18-production-gap.md`.
+- **Milestone 12** (findings and production gap) — complete. `docs/17-poc-findings.md`
+  documents all Gate A–I results (real numbers, no fabricated figures), the
+  mandatory reporting caveat verbatim, and the B≈A decision-logic branch that
+  fired. `docs/18-production-gap.md` assesses every non-goal and priority-orders
+  the seven production gaps. 18 acceptance tests in `tests/test_m12_acceptance.py`
+  verify the caveat is present verbatim and every non-goal from `docs/01` is
+  explicitly addressed.
 
 **Two critical bugs were found and fixed while implementing M9-M11** — both
 made prior forecast results on real (non-fixture) data meaningless: a
@@ -74,7 +79,7 @@ merged signal features (numerically identical to arm A), and `build_d3`
 referenced a column name (`week_start`) that never existed in real D0 output.
 See `docs/13-risks-and-dependencies.md` for the full list.
 
-Verification on Windows / Python 3.14.4: **296 tests passed** (up from 181).
+Verification on Windows / Python 3.13.14: **314 tests passed** (up from 296).
 A default D0/D1 → extraction run accepted all 675 records with zero schema
 rejections. This is **schema conformance, not extraction accuracy**. The
 vocabulary is still close to the generator templates; meaningful semantic
