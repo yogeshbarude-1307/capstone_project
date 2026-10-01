@@ -134,17 +134,33 @@ one command and writes `reports/manifest.json` with per-artifact and code
 SHA-256 hashes. Use `configs/e2e_full.json` for the default POC scale (40
 entities, 104 weeks) or `configs/e2e_smoke.json` for a fast (~15s) sanity check.
 
-### Gradio dashboard
+### Web dashboard (FastAPI + vanilla HTML/JS)
+
+```bash
+pip install ".[server]"   # adds fastapi + uvicorn (usually already installed)
+dsfs-server               # opens http://127.0.0.1:8000
+```
+
+A fully offline, single-page dashboard with five views:
+
+| View | What it answers |
+|---|---|
+| **Signal Intelligence** | What do the extracted notes say about future demand? Live filterable signal table with status badges, demand metrics, and a slide-in evidence panel that highlights the exact evidence span. |
+| **Forecast Results** | Did demand signals improve the forecast? Decision banner + 4-arm cards (A=tabular, B=oracle, C=extracted, D=shuffled) with MAE/MASE/Lift + SVG bar chart. |
+| **Extraction Quality** | How accurately did the extractor parse the notes? Field-level F1/precision/recall table, abstention stats, and the mandatory POC limitations caveat. |
+| **Drift Monitor** | Is the signal distribution changing? Detection status, latency (weeks after injection), and calibrated false-alert rate per scenario. |
+| **Lineage Tracer** | Where did a feature row come from? Entity + cutoff selector → contributing signals with evidence spans highlighted in the source note. |
+
+The **Run Pipeline** button in the top bar triggers the full `run_e2e` orchestration and refreshes all views. No page reload needed.
+
+### Gradio dashboard (legacy)
 
 ```bash
 pip install ".[ui]"   # adds gradio>=4.44
 dsfs-app              # opens http://127.0.0.1:7860
 ```
 
-Five tabs: **Run Pipeline** (trigger `dsfs-run` from the browser), **Forecast Results**
-(4-arm table + MAE bar chart + ablation matrix), **Extraction Metrics** (F1/precision/recall),
-**Drift Monitoring** (detection/latency/false-alert-rate), and **Lineage Explorer**
-(trace a feature row back to its source notes).
+Original five-tab Gradio UI — superseded by `dsfs-server` above.
 
 `requirements.txt` installs the package itself and current runtime/test
 requirements. Optional `ner`, `local-llm`, `forecast`, `tables`, and `ui` extras in

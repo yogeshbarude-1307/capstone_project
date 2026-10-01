@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DSFS — Demand Signal Intelligence</title>
+<style>
+/* ── Reset & tokens ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sb:#2D1B69;--sb2:#3D2580;--sb-text:#C4B5FD;--sb-active:#fff;
+  --accent:#5B21B6;--accent-h:#4C1D95;--accent-light:#EDE9FE;
+  --opp:#059669;--opp-bg:#ECFDF5;--opp-border:#A7F3D0;
+  --crit:#DC2626;--crit-bg:#FEF2F2;--crit-border:#FECACA;
+  --rev:#D97706;--rev-bg:#FFFBEB;--rev-border:#FDE68A;
+  --watch:#B45309;--watch-bg:#FFFBEB;--watch-border:#FCD34D;
+  --abs:#6B7280;--abs-bg:#F9FAFB;--abs-border:#E5E7EB;
+  --pg:#F5F5F8;--card:#FFFFFF;--border:#E5E7EB;
+  --t1:#111827;--t2:#6B7280;--t3:#9CA3AF;
+  --chip-bg:#EDE9FE;--chip-t:#4C1D95;
+  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;
+  background:var(--pg);color:var(--t1);display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+#sidebar{width:220px;min-width:220px;background:var(--sb);color:var(--sb-text);
+  display:flex;flex-direction:column;overflow-y:auto;z-index:10}
+.sb-brand{padding:20px 16px 12px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-brand-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:.3px}
+.sb-brand-sub{font-size:10px;font-weight:500;color:var(--sb-text);
+  text-transform:uppercase;letter-spacing:.8px;margin-top:2px;line-height:1.4}
+.sb-section{padding:16px 8px 4px;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.8px;color:#7C5FBF;padding-left:16px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;
+  cursor:pointer;border-radius:6px;margin:2px 8px;
+  font-size:13px;font-weight:500;color:var(--sb-text);transition:all .15s}
+.sb-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sb-item.active{background:rgba(255,255,255,.15);color:#fff;font-weight:600}
+.sb-item svg{opacity:.7;flex-shrink:0}
+.sb-item.active svg{opacity:1}
+.sb-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.1);
+  font-size:11px;color:#7C5FBF}
+
+/* ── Main area ───────────────────────────────────────────────── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+#topbar{background:#fff;border-bottom:1px solid var(--border);
+  padding:0 24px;height:52px;display:flex;align-items:center;gap:12px;
+  flex-shrink:0;z-index:5}
+#topbar .breadcrumb{font-size:12px;color:var(--t3);display:flex;align-items:center;gap:4px}
+#topbar .breadcrumb span{color:var(--t2)}
+.status-pill{display:flex;align-items:center;gap:6px;background:var(--accent-light);
+  color:var(--chip-t);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:500}
+.status-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--opp);flex-shrink:0}
+.status-pill.no-data .dot{background:var(--abs)}
+#topbar .spacer{flex:1}
+#btn-run{background:var(--accent);color:#fff;border:none;border-radius:6px;
+  padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:background .15s}
+#btn-run:hover{background:var(--accent-h)}
+#btn-run.running{background:#6B7280;cursor:not-allowed}
+.run-spinner{display:none;width:12px;height:12px;border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Content area ────────────────────────────────────────────── */
+#content{flex:1;overflow-y:auto;padding:28px 32px}
+.view{display:none}
+.view.active{display:block}
+
+/* ── Page header ─────────────────────────────────────────────── */
+.page-tag{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--accent);margin-bottom:6px}
+.page-title{font-size:24px;font-weight:700;color:var(--t1)}
+.page-sub{font-size:14px;color:var(--t2);margin-top:4px}
+
+/* ── KPI bar ─────────────────────────────────────────────────── */
+.kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:20px 0}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow)}
+.kpi-label{font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--t2);margin-bottom:6px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--t1)}
+.kpi-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.kpi-card.green .kpi-value{color:var(--opp)}
+.kpi-card.red   .kpi-value{color:var(--crit)}
+.kpi-card.amber .kpi-value{color:var(--rev)}
+
+/* ── Section header ──────────────────────────────────────────── */
+.section-wrap{margin-bottom:32px}
+.section-header{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.section-tag{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:var(--accent)}
+.section-title{font-size:18px;font-weight:700;color:var(--t1)}
+.section-count{font-size:14px;color:var(--t3);font-weight:400}
+.section-sub{font-size:13px;color:var(--t2);margin-bottom:14px}
+
+/* ── Filter bar ──────────────────────────────────────────────── */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.filter-bar input,.filter-bar select{
+  border:1px solid var(--border);border-radius:6px;padding:7px 10px;
+  font-size:13px;color:var(--t1);background:#fff;outline:none;
+  transition:border .15s}
+.filter-bar input{flex:1;min-width:160px}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent)}
+.filter-bar select{padding-right:28px;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center}
+
+/* ── Signal table ────────────────────────────────────────────── */
+.signal-table{background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.st-header{display:grid;grid-template-columns:130px 1fr 180px 180px 130px;
+  padding:10px 16px;background:#F9FAFB;border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--t3)}
+.st-row{display:grid;grid-template-columns:130px 1fr 180px 180px 130px;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  align-items:center;border-left:3px solid transparent;transition:background .1s;cursor:pointer}
+.st-row:last-child{border-bottom:none}
+.st-row:hover{background:#FAFAFA}
+.st-row.opp {border-left-color:var(--opp);background:var(--opp-bg) }
+.st-row.crit{border-left-color:var(--crit);background:var(--crit-bg)}
+.st-row.rev {border-left-color:var(--rev);background:var(--rev-bg) }
+.st-row.watch{border-left-color:var(--watch);background:var(--watch-bg)}
+.st-row.abs {border-left-color:var(--abs);background:var(--abs-bg) }
+
+/* STATUS badge */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;
+  border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.4px;
+  border:1px solid;white-space:nowrap}
+.badge.opp {color:var(--opp); border-color:var(--opp-border);background:var(--opp-bg)}
+.badge.crit{color:var(--crit);border-color:var(--crit-border);background:var(--crit-bg)}
+.badge.rev {color:var(--rev); border-color:var(--rev-border);background:var(--rev-bg)}
+.badge.watch{color:var(--watch);border-color:var(--watch-border);background:var(--watch-bg)}
+.badge.abs {color:var(--abs); border-color:var(--abs-border);background:var(--abs-bg)}
+.badge .bdot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.tag-negated{font-size:10px;color:var(--t3);text-decoration:line-through;
+  border:1px solid var(--border);border-radius:3px;padding:1px 5px;margin-top:3px;display:inline-block}
+
+/* SIGNAL column */
+.sig-type{font-weight:600;font-size:13px;color:var(--t1)}
+.sig-chips{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.chip{display:inline-block;font-size:11px;font-weight:500;
+  background:var(--chip-bg);color:var(--chip-t);
+  border-radius:4px;padding:2px 7px;white-space:nowrap}
+.chip.fulfil{background:#DBEAFE;color:#1E40AF}
+.chip.demand{background:#DCFCE7;color:#166534}
+.chip.src   {background:#F3F4F6;color:#374151}
+.chip.extr  {background:#F5F3FF;color:#5B21B6}
+.sig-excerpt{font-size:12px;color:var(--t2);font-style:italic;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* METRICS column */
+.dir-up  {color:var(--opp);font-weight:600}
+.dir-down{color:var(--crit);font-weight:600}
+.dir-stable{color:var(--t2);font-weight:600}
+.met-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap}
+.cond-text{font-size:11px;color:var(--rev);font-style:italic;margin-top:2px}
+
+/* NOTE SOURCE column */
+.src-col{display:flex;flex-direction:column;gap:4px}
+.src-date{font-size:11px;color:var(--t3)}
+
+/* ACTION column */
+.btn-evidence{background:var(--accent);color:#fff;border:none;
+  border-radius:6px;padding:7px 12px;font-size:12px;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:background .15s}
+.btn-evidence:hover{background:var(--accent-h)}
+
+.empty-state{padding:40px;text-align:center;color:var(--t3)}
+.empty-icon{font-size:32px;margin-bottom:8px}
+
+/* ── Evidence side panel ─────────────────────────────────────── */
+#panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);
+  z-index:100;display:none}
+#evidence-panel{position:fixed;right:0;top:0;bottom:0;width:420px;
+  background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.12);
+  z-index:101;display:flex;flex-direction:column;transform:translateX(100%);
+  transition:transform .25s cubic-bezier(.4,0,.2,1)}
+#evidence-panel.open{transform:translateX(0)}
+.ep-header{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+  background:#F9FAFB;flex-shrink:0}
+.ep-title{font-size:14px;font-weight:700;color:var(--t1)}
+.ep-sub{font-size:12px;color:var(--t2);margin-top:2px}
+.ep-close{border:none;background:none;cursor:pointer;color:var(--t3);
+  font-size:20px;line-height:1;padding:2px 4px}
+.ep-close:hover{color:var(--t1)}
+.ep-body{flex:1;overflow-y:auto;padding:20px}
+.ep-section{margin-bottom:20px}
+.ep-section-title{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--t3);margin-bottom:8px}
+.note-text{font-size:13px;line-height:1.7;color:var(--t1);
+  background:#F9FAFB;border-radius:6px;padding:12px;border:1px solid var(--border)}
+.note-text mark{background:#FEF08A;border-radius:2px;padding:0 1px}
+.kv-grid{display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.kv-key{font-size:12px;color:var(--t2);white-space:nowrap;padding:3px 0}
+.kv-val{font-size:12px;color:var(--t1);font-weight:500;padding:3px 0;word-break:break-all}
+
+/* ── Forecast view ───────────────────────────────────────────── */
+.decision-banner{border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;
+  border:1px solid;font-size:14px}
+.decision-banner.good{background:#ECFDF5;border-color:#A7F3D0;color:#065F46}
+.decision-banner.neutral{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
+.decision-banner.bad{background:#FEF2F2;border-color:#FECACA;color:#991B1B}
+.db-title{font-weight:700;margin-bottom:3px;font-size:15px}
+.db-caveat{font-size:12px;opacity:.8;margin-top:6px;font-style:italic}
+.arm-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.arm-card{background:var(--card);border:2px solid var(--border);
+  border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.arm-card.best{border-color:var(--opp)}
+.arm-card.blue{border-color:#3B82F6}
+.arm-card.orange{border-color:#F59E0B}
+.arm-label{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--t3);margin-bottom:2px}
+.arm-name{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:12px}
+.arm-metric{margin-bottom:8px}
+.arm-metric-label{font-size:11px;color:var(--t2)}
+.arm-metric-val{font-size:18px;font-weight:700;color:var(--t1)}
+.arm-lift{font-size:13px;font-weight:700;margin-top:8px;padding:4px 8px;
+  border-radius:4px;display:inline-block}
+.arm-lift.pos{background:var(--opp-bg);color:var(--opp)}
+.arm-lift.neg{background:var(--crit-bg);color:var(--crit)}
+.arm-lift.neu{background:var(--abs-bg);color:var(--abs)}
+
+/* SVG bar chart */
+.chart-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.chart-title{font-size:13px;font-weight:600;color:var(--t2);margin-bottom:14px}
+
+/* Ablation table */
+.data-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.data-table th{padding:10px 14px;background:#F9FAFB;font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;color:var(--t3);
+  border-bottom:1px solid var(--border);text-align:left}
+.data-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--t1)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#FAFAFA}
+.f1-high{color:var(--opp);font-weight:600}
+.f1-mid{color:var(--rev);font-weight:600}
+.f1-low{color:var(--crit);font-weight:600}
+
+/* ── Extraction view ─────────────────────────────────────────── */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;text-align:center;box-shadow:var(--shadow)}
+.stat-card .big{font-size:32px;font-weight:800;color:var(--t1)}
+.stat-card .big.green{color:var(--opp)}
+.stat-card .lbl{font-size:12px;color:var(--t2);margin-top:4px}
+.caveat-box{background:#FFFBEB;border:1px solid var(--rev-border);border-radius:var(--radius);
+  padding:14px;font-size:13px;color:#92400E;margin-top:16px;line-height:1.6}
+.caveat-box strong{display:block;margin-bottom:4px}
+.limitations{list-style:disc;padding-left:18px;font-size:12px;color:var(--t2);margin-top:8px}
+.limitations li{margin-bottom:4px}
+
+/* ── Drift view ──────────────────────────────────────────────── */
+.drift-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px}
+.drift-card{background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.drift-card.not-impl{opacity:.5}
+.drift-badge{display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:700;padding:5px 10px;border-radius:4px;margin-bottom:10px}
+.drift-badge.detected{background:var(--crit-bg);color:var(--crit);border:1px solid var(--crit-border)}
+.drift-badge.not-detected{background:var(--opp-bg);color:var(--opp);border:1px solid var(--opp-border)}
+.drift-badge.na{background:var(--abs-bg);color:var(--abs);border:1px solid var(--abs-border)}
+.drift-name{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.drift-meta{font-size:12px;color:var(--t2);margin-bottom:4px}
+
+/* ── Lineage view ────────────────────────────────────────────── */
+.lineage-controls{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:20px;box-shadow:var(--shadow)}
+.lc-field{display:flex;flex-direction:column;gap:4px}
+.lc-label{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.lc-field input,.lc-field select{border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;font-size:13px;color:var(--t1);background:#fff;outline:none;min-width:160px}
+.lc-field input:focus,.lc-field select:focus{border-color:var(--accent)}
+#btn-trace{background:var(--accent);color:#fff;border:none;border-radius:6px;
+  padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;align-self:flex-end;
+  transition:background .15s}
+#btn-trace:hover{background:var(--accent-h)}
+.lineage-result{display:flex;flex-direction:column;gap:14px}
+.lin-signal-card{background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.lin-sig-header{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:#F9FAFB;border-bottom:1px solid var(--border);cursor:pointer}
+.lin-sig-title{font-size:13px;font-weight:700;color:var(--t1)}
+.lin-sig-chips{display:flex;gap:6px}
+.lin-sig-body{padding:14px 16px;display:none}
+.lin-sig-body.open{display:block}
+.evidence-highlight{font-size:13px;line-height:1.7;color:var(--t1);
+  background:#F9FAFB;border-radius:6px;padding:12px;border:1px solid var(--border);margin-top:8px}
+.evidence-highlight mark{background:#FEF08A;border-radius:2px;padding:0 1px}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--t1);color:#fff;
+  padding:12px 18px;border-radius:8px;font-size:13px;font-weight:500;
+  box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:200;
+  transition:opacity .3s;opacity:0;pointer-events:none}
+#toast.show{opacity:1}
+
+/* ── Loading skeleton ────────────────────────────────────────── */
+.skeleton{background:linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────────────────── -->
+<nav id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-title">⚡ DSFS</div>
+    <div class="sb-brand-sub">Demand Signal<br>Feature Service</div>
+  </div>
+  <div class="sb-section">Navigation</div>
+  <div class="sb-item active" data-view="signals" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Signal Intelligence
+  </div>
+  <div class="sb-item" data-view="forecast" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Forecast Results
+  </div>
+  <div class="sb-item" data-view="extraction" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Extraction Quality
+  </div>
+  <div class="sb-item" data-view="drift" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    Drift Monitor
+  </div>
+  <div class="sb-item" data-view="lineage" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><line x1="6" y1="9" x2="12" y2="15"/><line x1="18" y1="9" x2="12" y2="15"/></svg>
+    Lineage Tracer
+  </div>
+  <div class="sb-footer">POC · Offline/Local Only</div>
+</nav>
+
+<!-- ── Main ─────────────────────────────────────────────────── -->
+<div id="main">
+  <!-- Top bar -->
+  <div id="topbar">
+    <div class="breadcrumb">
+      <span>DSFS</span> › <span id="breadcrumb-page">Signal Intelligence</span>
+    </div>
+    <div id="status-pill" class="status-pill no-data">
+      <span class="dot"></span>
+      <span id="status-text">Loading…</span>
+    </div>
+    <div class="spacer"></div>
+    <button id="btn-run" onclick="runPipeline()">
+      <span class="run-spinner" id="run-spinner"></span>
+      ▶ Run Pipeline
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+
+    <!-- ── VIEW: Signal Intelligence ───────────────────────────── -->
+    <div class="view active" id="view-signals">
+      <div class="page-tag">Signal Intelligence</div>
+      <div class="page-title">Demand Signal Briefing</div>
+      <div class="page-sub">Early demand signals extracted from account &amp; sales notes — monitor direction, certainty, and timing.</div>
+
+      <div class="kpi-bar" id="kpi-bar">
+        <div class="kpi-card"><div class="kpi-label">Total Signals</div><div class="kpi-value skeleton" style="height:34px;width:40px"> </div></div>
+        <div class="kpi-card"><div class="kpi-label">Demand Channel</div><div class="kpi-value skeleton" style="height:34px;width:40px"> </div></div>
+        <div class="kpi-card green"><div class="kpi-label">Increase</div><div class="kpi-value skeleton" style="height:34px;width:40px"> </div></div>
+        <div class="kpi-card red"><div class="kpi-label">Decrease</div><div class="kpi-value skeleton" style="height:34px;width:40px"> </div></div>
+        <div class="kpi-card amber"><div class="kpi-label">In Review</div><div class="kpi-value skeleton" style="height:34px;width:40px"> </div></div>
+      </div>
+
+      <div class="section-wrap">
+        <div class="section-tag">Decision Watch</div>
+        <div class="section-header">
+          <div class="section-title">Demand Signals</div>
+          <div class="section-count" id="signal-count"></div>
+        </div>
+        <div class="section-sub">Status shows demand direction; arrows mark movement in the observed metrics.</div>
+
+        <div class="filter-bar">
+          <input type="text" id="f-search" placeholder="Search note text…" oninput="filterSignals()">
+          <select id="f-entity" onchange="filterSignals()"><option value="">All Entities</option></select>
+          <select id="f-direction" onchange="filterSignals()">
+            <option value="">All Directions</option>
+            <option>INCREASE</option><option>DECREASE</option>
+            <option>STABLE</option><option>UNKNOWN</option>
+          </select>
+          <select id="f-type" onchange="filterSignals()"><option value="">All Signal Types</option></select>
+          <select id="f-certainty" onchange="filterSignals()">
+            <option value="">All Certainty</option>
+            <option>ASSERTED</option><option>EXPECTED</option>
+            <option>POSSIBLE</option><option>UNKNOWN</option>
+          </select>
+        </div>
+
+        <div class="signal-table">
+          <div class="st-header">
+            <div>STATUS</div><div>SIGNAL</div>
+            <div>DEMAND METRICS</div><div>NOTE SOURCE</div><div>ACTION</div>
+          </div>
+          <div id="signal-rows">
+            <div class="empty-state"><div class="skeleton" style="height:40px;margin:8px 0"></div><div class="skeleton" style="height:40px;margin:8px 0"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: Forecast Results ───────────────────────────────── -->
+    <div class="view" id="view-forecast">
+      <div class="page-tag">Forecast Results</div>
+      <div class="page-title">4-Arm Experiment</div>
+      <div class="page-sub">Does adding demand signals improve the forecast? Oracle (B) is the upper bound; extracted (C) is the real pipeline result.</div>
+      <div id="decision-banner" class="decision-banner neutral" style="margin-top:20px">
+        <div class="db-title" id="db-title">Loading forecast results…</div>
+        <div id="db-body"></div>
+        <div class="db-caveat" id="db-caveat"></div>
+      </div>
+      <div class="arm-cards" id="arm-cards">
+        <div class="arm-card"><div class="skeleton" style="height:120px"></div></div>
+        <div class="arm-card"><div class="skeleton" style="height:120px"></div></div>
+        <div class="arm-card"><div class="skeleton" style="height:120px"></div></div>
+        <div class="arm-card"><div class="skeleton" style="height:120px"></div></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">MAE by Forecast Arm (lower = better baseline comparison)</div>
+        <svg id="mae-chart" width="100%" height="140"></svg>
+      </div>
+      <div class="section-wrap">
+        <div class="section-title" style="font-size:15px;margin-bottom:10px">Ablation Matrix</div>
+        <p style="font-size:13px;color:var(--t2);margin-bottom:12px">See <code>reports/forecast/forecast_ablation_results.md</code> for the full matrix. Summary: direction/magnitude features are statistically indistinguishable from no effect; effective_time features concentrate the loss.</p>
+      </div>
+    </div>
+
+    <!-- ── VIEW: Extraction Quality ─────────────────────────────── -->
+    <div class="view" id="view-extraction">
+      <div class="page-tag">Extraction Quality</div>
+      <div class="page-title">Signal Extraction Metrics</div>
+      <div class="page-sub">Field-level precision, recall and F1 from the evaluation run. These are <strong>self-scored development diagnostics</strong>, not independent gold-label measurements.</div>
+      <div class="stat-row" id="ext-stats" style="margin-top:20px">
+        <div class="stat-card"><div class="big skeleton" style="height:40px;width:60px;margin:auto"> </div><div class="lbl">Schema Valid Rate</div></div>
+        <div class="stat-card"><div class="big skeleton" style="height:40px;width:60px;margin:auto"> </div><div class="lbl">Accepted Signals</div></div>
+        <div class="stat-card"><div class="big skeleton" style="height:40px;width:60px;margin:auto"> </div><div class="lbl">Quarantined</div></div>
+      </div>
+      <div class="section-wrap">
+        <div class="section-title" style="font-size:15px;margin-bottom:10px">Field-level Metrics</div>
+        <div id="ext-table-wrap"><div class="skeleton" style="height:200px"></div></div>
+      </div>
+      <div id="ext-caveat"></div>
+    </div>
+
+    <!-- ── VIEW: Drift Monitor ──────────────────────────────────── -->
+    <div class="view" id="view-drift">
+      <div class="page-tag">Drift Monitor</div>
+      <div class="page-title">Signal Distribution Monitoring</div>
+      <div class="page-sub">Detection outcome, latency (weeks after injection), and calibrated false-alert rate — always reported together. Latency is measured against the known injection week, not confirmed forecast degradation.</div>
+      <div class="drift-cards" id="drift-cards" style="margin-top:20px">
+        <div class="drift-card"><div class="skeleton" style="height:100px"></div></div>
+      </div>
+      <div style="margin-top:16px;padding:14px;background:var(--abs-bg);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--t2)">
+        <strong>POC scope note:</strong> <code>direction_class_shift</code> and <code>concept_drift</code> are not implemented in this POC — they would require modifying the causal-separation-critical <code>latent.py</code>/<code>demand.py</code> modules protected by the leakage test suite.
+      </div>
+    </div>
+
+    <!-- ── VIEW: Lineage Tracer ─────────────────────────────────── -->
+    <div class="view" id="view-lineage">
+      <div class="page-tag">Lineage Tracer</div>
+      <div class="page-title">Feature → Signal → Note</div>
+      <div class="page-sub">Trace a feature row back to the exact source notes that contributed to it. Every feature value is point-in-time correct: only signals whose <code>available_at ≤ cutoff</code> appear.</div>
+      <div class="lineage-controls" style="margin-top:20px">
+        <div class="lc-field">
+          <span class="lc-label">Entity</span>
+          <select id="lin-entity"><option value="">Select entity…</option></select>
+        </div>
+        <div class="lc-field">
+          <span class="lc-label">Forecast Cutoff (ISO datetime)</span>
+          <input type="text" id="lin-cutoff" value="2024-06-01T00:00:00" placeholder="YYYY-MM-DDTHH:MM:SS">
+        </div>
+        <button id="btn-trace" onclick="traceLineage()">Trace ↗</button>
+      </div>
+      <div class="lineage-result" id="lineage-result"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ── Evidence panel ─────────────────────────────────────────── -->
+<div id="panel-overlay" onclick="closePanel()"></div>
+<div id="evidence-panel">
+  <div class="ep-header">
+    <div>
+      <div class="ep-title" id="ep-title">Evidence</div>
+      <div class="ep-sub" id="ep-sub"></div>
+    </div>
+    <button class="ep-close" onclick="closePanel()">×</button>
+  </div>
+  <div class="ep-body" id="ep-body"></div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let _signals = [];
+let _filtered = [];
+
+// ── Navigation ──────────────────────────────────────────────────
+const viewTitles = {signals:'Signal Intelligence',forecast:'Forecast Results',
+  extraction:'Extraction Quality',drift:'Drift Monitor',lineage:'Lineage Tracer'};
+
+function nav(el){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  const v = el.dataset.view;
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('breadcrumb-page').textContent = viewTitles[v];
+  if(v==='forecast') loadForecast();
+  if(v==='extraction') loadExtraction();
+  if(v==='drift') loadDrift();
+  if(v==='lineage') loadLineageEntities();
+}
+
+// ── Toast ───────────────────────────────────────────────────────
+function toast(msg,dur=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ── Status bar ──────────────────────────────────────────────────
+async function loadStatus(){
+  try{
+    const r=await fetch('/api/status');
+    const d=await r.json();
+    const pill=document.getElementById('status-pill');
+    const txt=document.getElementById('status-text');
+    if(d.ready){
+      pill.classList.remove('no-data');
+      txt.textContent=`${d.run_id} · ${d.n_notes} notes · ${d.n_entities} entities`;
+    } else {
+      txt.textContent='No run data — click Run Pipeline';
+    }
+  } catch(e){ document.getElementById('status-text').textContent='Error loading status'; }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────
+function fmt(s){ return s?s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'—'; }
+function fmtDate(s){ return s?s.slice(0,10):'—'; }
+function fmtNum(n,d=2){ return (typeof n==='number')?n.toFixed(d):'—'; }
+
+function badgeClass(sig){
+  if(sig.validation_status==='REVIEW') return 'rev';
+  if(sig.signal_type==='NO_SIGNAL') return 'abs';
+  if(sig.direction==='INCREASE') return 'opp';
+  if(sig.direction==='DECREASE') return 'crit';
+  if(sig.direction==='STABLE') return 'watch';
+  return 'abs';
+}
+function badgeLabel(sig){
+  if(sig.validation_status==='REVIEW') return 'REVIEW';
+  if(sig.signal_type==='NO_SIGNAL') return 'ABSTAINED';
+  if(sig.direction==='INCREASE') return 'OPPORTUNITY';
+  if(sig.direction==='DECREASE') return 'CRITICAL';
+  if(sig.direction==='STABLE') return 'WATCH';
+  return 'WATCH';
+}
+function dirArrow(d){
+  if(d==='INCREASE') return '<span class="dir-up">▲ INCREASE</span>';
+  if(d==='DECREASE') return '<span class="dir-down">▼ DECREASE</span>';
+  if(d==='STABLE')   return '<span class="dir-stable">→ STABLE</span>';
+  return `<span class="dir-stable">${d||'—'}</span>`;
+}
+function certaintyChip(c){
+  const map={ASSERTED:'chip',EXPECTED:'chip',POSSIBLE:'chip',UNKNOWN:'chip src'};
+  return `<span class="chip ${map[c]||'chip src'}">${c||'UNKNOWN'}</span>`;
+}
+
+// ── Signal Intelligence ──────────────────────────────────────────
+async function loadSignals(){
+  try{
+    const r=await fetch('/api/signals');
+    _signals=await r.json();
+    buildFilterOptions();
+    filterSignals();
+    buildKPIs();
+  } catch(e){ document.getElementById('signal-rows').innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div>Could not load signals. Run the pipeline first.</div>'; }
+}
+
+function buildFilterOptions(){
+  const entities=[...new Set(_signals.map(s=>s.forecast_key).filter(Boolean))].sort();
+  const types=[...new Set(_signals.map(s=>s.signal_type).filter(Boolean))].sort();
+  const esel=document.getElementById('f-entity');
+  const tsel=document.getElementById('f-type');
+  entities.forEach(e=>{ const o=document.createElement('option');o.value=o.textContent=e;esel.appendChild(o); });
+  types.forEach(t=>{ const o=document.createElement('option');o.value=o.textContent=t;tsel.appendChild(o); });
+}
+
+function buildKPIs(){
+  const total=_signals.length;
+  const demand=_signals.filter(s=>s.impact_channel==='DEMAND').length;
+  const inc=_signals.filter(s=>s.direction==='INCREASE'&&s.record_status==='ACTIVE').length;
+  const dec=_signals.filter(s=>s.direction==='DECREASE'&&s.record_status==='ACTIVE').length;
+  const rev=_signals.filter(s=>s.validation_status==='REVIEW').length;
+  const kpi=document.getElementById('kpi-bar');
+  kpi.innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Total Signals</div><div class="kpi-value">${total}</div><div class="kpi-sub">all extraction runs</div></div>
+    <div class="kpi-card"><div class="kpi-label">Demand Channel</div><div class="kpi-value">${demand}</div><div class="kpi-sub">impact_channel = DEMAND</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Increase</div><div class="kpi-value">${inc}</div><div class="kpi-sub">ACTIVE signals</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Decrease</div><div class="kpi-value">${dec}</div><div class="kpi-sub">ACTIVE signals</div></div>
+    <div class="kpi-card amber"><div class="kpi-label">In Review</div><div class="kpi-value">${rev}</div><div class="kpi-sub">need adjudication</div></div>`;
+}
+
+function filterSignals(){
+  const q=(document.getElementById('f-search').value||'').toLowerCase();
+  const ent=document.getElementById('f-entity').value;
+  const dir=document.getElementById('f-direction').value;
+  const typ=document.getElementById('f-type').value;
+  const cer=document.getElementById('f-certainty').value;
+
+  _filtered=_signals.filter(s=>{
+    if(ent && s.forecast_key!==ent) return false;
+    if(dir && s.direction!==dir) return false;
+    if(typ && s.signal_type!==typ) return false;
+    if(cer && s.business_certainty!==cer) return false;
+    if(q && !(s.raw_text||'').toLowerCase().includes(q) &&
+           !(s.signal_type||'').toLowerCase().includes(q) &&
+           !(s.forecast_key||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('signal-count').textContent=`(${_filtered.length} shown)`;
+  renderSignalRows();
+}
+
+function renderSignalRows(){
+  const container=document.getElementById('signal-rows');
+  if(!_filtered.length){
+    container.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div>No signals match the current filters.</div>';
+    return;
+  }
+  container.innerHTML=_filtered.map((s,i)=>{
+    const bc=badgeClass(s);
+    const mag=s.magnitude_value!=null?`${s.magnitude_value}${s.magnitude_unit||''}`:'—';
+    const tw=s.time_expression_raw||'—';
+    const cond=s.conditionality==='CONDITIONAL'&&s.condition_text?
+      `<div class="cond-text">IF: ${s.condition_text}</div>`:'';
+    const negTag=s.negated?`<span class="tag-negated">NEGATED</span>`:'';
+    return `<div class="st-row ${bc}" onclick="openPanel(${i})">
+      <div>
+        <span class="badge ${bc}"><span class="bdot"></span>${badgeLabel(s)}</span>
+        ${negTag}
+      </div>
+      <div>
+        <div class="sig-type">${fmt(s.signal_type)}</div>
+        <div class="sig-chips">
+          <span class="chip">${s.forecast_key||'—'}</span>
+          <span class="chip ${s.impact_channel==='DEMAND'?'demand':'fulfil'}">${s.impact_channel||'—'}</span>
+        </div>
+        <div class="sig-excerpt">${(s.raw_text||'').slice(0,90)}</div>
+      </div>
+      <div>
+        <div class="met-row">${dirArrow(s.direction)} ${certaintyChip(s.business_certainty)}</div>
+        <div class="met-row"><span style="color:var(--t2);font-size:12px">Magnitude:</span> <strong>${mag}</strong></div>
+        <div class="met-row"><span style="color:var(--t2);font-size:12px">Window:</span> <strong style="font-size:12px">${tw}</strong></div>
+        ${cond}
+      </div>
+      <div class="src-col">
+        <span class="chip src">${fmt(s.source_type)||'—'}</span>
+        <span class="src-date">${fmtDate(s.authored_at)}</span>
+        <span class="chip extr">${(s.extractor_version||'').replace('rules-ner-','')}</span>
+      </div>
+      <div><button class="btn-evidence" onclick="event.stopPropagation();openPanel(${i})">View evidence →</button></div>
+    </div>`;
+  }).join('');
+}
+
+// ── Evidence panel ───────────────────────────────────────────────
+function openPanel(i){
+  const s=_filtered[i];
+  document.getElementById('ep-title').textContent=`${fmt(s.signal_type)} — ${s.forecast_key||''}`;
+  document.getElementById('ep-sub').textContent=`Signal ID: ${s.signal_id}`;
+
+  const bc=badgeClass(s);
+  const text=s.raw_text||'';
+  const hi=highlightSpan(text,s.evidence_ref?.char_start,s.evidence_ref?.char_end);
+
+  const body=document.getElementById('ep-body');
+  body.innerHTML=`
+    <div class="ep-section">
+      <div class="ep-section-title">Source Note</div>
+      <div class="note-text">${hi}</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:6px">
+        ${s.source_type?`<span class="chip src">${fmt(s.source_type)}</span> `:''}
+        Authored: ${fmtDate(s.authored_at)} · Available: ${fmtDate(s.available_at)}
+      </div>
+    </div>
+    <div class="ep-section">
+      <div class="ep-section-title">Extracted Signal Fields</div>
+      <div class="kv-grid">
+        ${kv('Signal Type',fmt(s.signal_type))}
+        ${kv('Direction',s.direction)}
+        ${kv('Impact Channel',s.impact_channel)}
+        ${kv('Certainty',s.business_certainty)}
+        ${kv('Conditionality',s.conditionality)}
+        ${s.condition_text?kv('Condition',s.condition_text):''}
+        ${kv('Negated',s.negated?'Yes':'No')}
+        ${kv('Magnitude',s.magnitude_value!=null?`${s.magnitude_value} ${s.magnitude_unit||''}`.trim():'—')}
+        ${kv('Time Window',s.time_expression_raw||'—')}
+        ${kv('Validation',s.validation_status)}
+        ${s.abstention_reason?kv('Abstention Reason',s.abstention_reason):''}
+      </div>
+    </div>
+    <div class="ep-section">
+      <div class="ep-section-title">Point-in-Time Info</div>
+      <div class="kv-grid">
+        ${kv('Available At',s.available_at||'—')}
+        ${kv('Effective Start',s.effective_start||'—')}
+        ${kv('Effective End',s.effective_end||'—')}
+        ${kv('Extracted At',s.extracted_at||'—')}
+        ${kv('Run ID',(s.extraction_run_id||'').slice(-8))}
+      </div>
+    </div>`;
+
+  document.getElementById('panel-overlay').style.display='block';
+  document.getElementById('evidence-panel').classList.add('open');
+}
+
+function kv(k,v){ return `<div class="kv-key">${k}</div><div class="kv-val">${v||'—'}</div>`; }
+
+function highlightSpan(text,start,end){
+  if(!text) return '';
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if(start==null||end==null||start>=end) return esc(text);
+  return esc(text.slice(0,start))+'<mark>'+esc(text.slice(start,end))+'</mark>'+esc(text.slice(end));
+}
+
+function closePanel(){
+  document.getElementById('panel-overlay').style.display='none';
+  document.getElementById('evidence-panel').classList.remove('open');
+}
+
+// ── Forecast ────────────────────────────────────────────────────
+async function loadForecast(){
+  try{
+    const r=await fetch('/api/forecast');
+    const d=await r.json();
+    if(d.error){ document.getElementById('arm-cards').innerHTML='<div class="empty-state">'+d.error+'</div>'; return; }
+
+    const arms={
+      A:{name:'Tabular Baseline',desc:'Lag+seasonal features only',cls:''},
+      B:{name:'Oracle (Upper Bound)',desc:'Ground-truth signal features',cls:'best'},
+      C:{name:'Extracted Signals',desc:'Real pipeline features',cls:'blue'},
+      D:{name:'Shuffled Control',desc:'Entity/time alignment broken',cls:'orange'},
+    };
+    const bLift=(d.B?.lift_vs_a||0)*100;
+    const cLift=(d.C?.lift_vs_a||0)*100;
+
+    // Decision banner
+    let bannerCls='neutral', dbTitle='', dbBody='';
+    if(bLift>3){
+      bannerCls='good';
+      dbTitle=`✓ Oracle signal adds forecast value — B beats A by ${bLift.toFixed(1)}%`;
+      dbBody=cLift>2?`Extracted arm (C) also improves by ${cLift.toFixed(1)}% — extraction is effective.`:
+        `Extracted arm (C) improvement (${cLift.toFixed(1)}%) is smaller than oracle — extraction may be the bottleneck.`;
+    } else {
+      bannerCls='neutral';
+      dbTitle=`B ≈ A — Oracle arm did not beat the tabular baseline (+${bLift.toFixed(1)}%)`;
+      dbBody='Per the docs/08 decision logic: rethink the hypothesis or the feature/model design before iterating on the extractor. The bottleneck is upstream of extraction.';
+    }
+    const banner=document.getElementById('decision-banner');
+    banner.className=`decision-banner ${bannerCls}`;
+    document.getElementById('db-title').textContent=dbTitle;
+    document.getElementById('db-body').textContent=dbBody;
+    document.getElementById('db-caveat').textContent=
+      'This POC demonstrates mechanics on synthetic data only. Schema conformance ≠ extraction accuracy. See docs/17-poc-findings.md.';
+
+    // Arm cards
+    document.getElementById('arm-cards').innerHTML=Object.entries(arms).map(([k,info])=>{
+      const m=d[k]||{};
+      const lift=m.lift_vs_a!=null?(m.lift_vs_a*100):null;
+      const liftHtml=lift!=null?
+        `<div class="arm-lift ${lift>0?'pos':lift<-1?'neg':'neu'}">${lift>0?'+':''}${lift.toFixed(1)}% vs A</div>`:'';
+      return `<div class="arm-card ${info.cls}">
+        <div class="arm-label">Arm ${k}</div>
+        <div class="arm-name">${info.name}</div>
+        <div class="arm-metric"><div class="arm-metric-label">MAE</div><div class="arm-metric-val">${fmtNum(m.mae)}</div></div>
+        <div class="arm-metric"><div class="arm-metric-label">MASE</div><div class="arm-metric-val">${fmtNum(m.mase)}</div></div>
+        ${liftHtml}
+        <div style="font-size:11px;color:var(--t3);margin-top:6px">${info.desc}</div>
+      </div>`;
+    }).join('');
+
+    // SVG bar chart
+    const entries=[['A',d.A?.mae,0],['B',d.B?.mae,1],['C',d.C?.mae,2],['D',d.D?.mae,3]];
+    const maxMAE=Math.max(...entries.map(e=>e[1]||0))*1.1;
+    const colors=['#6B7280','#059669','#3B82F6','#F59E0B'];
+    const svg=document.getElementById('mae-chart');
+    const W=svg.getBoundingClientRect().width||600;
+    const bH=22,gap=8,pad=50;
+    svg.setAttribute('height',(bH+gap)*4+20);
+    svg.innerHTML=entries.map(([lbl,val,i])=>{
+      const bw=Math.max(1,((val||0)/maxMAE)*(W-pad-80));
+      const y=i*(bH+gap)+4;
+      return `<text x="0" y="${y+16}" font-size="12" fill="#6B7280">${lbl}</text>
+        <rect x="${pad}" y="${y}" width="${bw}" height="${bH}" rx="3" fill="${colors[i]}"/>
+        <text x="${pad+bw+6}" y="${y+15}" font-size="12" fill="#374151" font-weight="600">${fmtNum(val)}</text>`;
+    }).join('');
+  } catch(e){ console.error(e); }
+}
+
+// ── Extraction ──────────────────────────────────────────────────
+async function loadExtraction(){
+  try{
+    const r=await fetch('/api/extraction');
+    const d=await r.json();
+    if(d.error){ document.getElementById('ext-table-wrap').innerHTML='<div class="empty-state">'+d.error+'</div>'; return; }
+
+    // Stats
+    document.getElementById('ext-stats').innerHTML=`
+      <div class="stat-card"><div class="big green">${d.accepted||'—'}</div><div class="lbl">Accepted Signals</div></div>
+      <div class="stat-card"><div class="big ${(d.quarantined||0)>0?'':'green'}">${d.quarantined||0}</div><div class="lbl">Quarantined</div></div>
+      <div class="stat-card"><div class="big">${d.n_notes||'—'}</div><div class="lbl">Eval Dataset Size</div></div>`;
+
+    // Metrics table
+    const metrics=d.metrics||{};
+    const rows=Object.entries(metrics).map(([name,v])=>{
+      if(typeof v!=='object') return '';
+      const f1=v.f1!=null?v.f1:null;
+      const cls=f1==null?'':f1>=0.8?'f1-high':f1>=0.5?'f1-mid':'f1-low';
+      return `<tr>
+        <td>${fmt(name)}</td>
+        <td>${v.precision!=null?v.precision.toFixed(3):'—'}</td>
+        <td>${v.recall!=null?v.recall.toFixed(3):'—'}</td>
+        <td class="${cls}">${f1!=null?f1.toFixed(3):'—'}</td>
+        <td>${v.support!=null?v.support:'—'}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('ext-table-wrap').innerHTML=rows?`
+      <table class="data-table">
+        <thead><tr><th>Metric</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`:'<div class="empty-state">No metric data in report.</div>';
+
+    // Caveat
+    const cavDiv=document.getElementById('ext-caveat');
+    const lims=d.limitations||[];
+    cavDiv.innerHTML=`<div class="caveat-box">
+      <strong>⚠ Important limitations</strong>
+      ${d.provisional?'<p>These are <strong>provisional self-scored labels</strong>, not independently human-adjudicated gold.</p>':''}
+      <ul class="limitations">${lims.map(l=>`<li>${l}</li>`).join('')}</ul>
+    </div>`;
+  } catch(e){ console.error(e); }
+}
+
+// ── Drift ────────────────────────────────────────────────────────
+async function loadDrift(){
+  try{
+    const r=await fetch('/api/drift');
+    const d=await r.json();
+    const container=document.getElementById('drift-cards');
+    if(d.error||d.skipped){
+      container.innerHTML=`<div class="drift-card">
+        <div class="drift-badge na">— SKIPPED</div>
+        <div class="drift-name">No drift scenario seeded</div>
+        <div class="drift-meta">${d.reason||d.error||'Run with a drift config (e2e_smoke.json seeds note_length_shift).'}</div>
+      </div>`;
+      return;
+    }
+    const detected=d.detected;
+    const latency=d.detection_latency_weeks;
+    const far=d.calibrated_false_alert_rate;
+    container.innerHTML=`
+      <div class="drift-card">
+        <div class="drift-badge ${detected?'detected':'not-detected'}">${detected?'✓ DETECTED':'✗ NOT DETECTED'}</div>
+        <div class="drift-name">${d.scenario||'Unknown scenario'}</div>
+        <div class="drift-meta">Monitor: <strong>${d.monitor_layer||'—'} / ${d.monitor_metric||'—'}</strong></div>
+        <div class="drift-meta">Detection latency: <strong>${latency!=null?latency+' weeks after injection':'N/A (not detected)'}</strong></div>
+        <div class="drift-meta">Calibrated false-alert rate: <strong>${far!=null&&!isNaN(far)?(far*100).toFixed(1)+'%':'N/A'}</strong></div>
+      </div>
+      <div class="drift-card not-impl">
+        <div class="drift-badge na">NOT IMPLEMENTED</div>
+        <div class="drift-name">direction_class_shift</div>
+        <div class="drift-meta">Requires modifying causal-separation modules — excluded from POC scope.</div>
+      </div>
+      <div class="drift-card not-impl">
+        <div class="drift-badge na">NOT IMPLEMENTED</div>
+        <div class="drift-name">concept_drift</div>
+        <div class="drift-meta">Requires modifying causal-separation modules — excluded from POC scope.</div>
+      </div>`;
+  } catch(e){ console.error(e); }
+}
+
+// ── Lineage ──────────────────────────────────────────────────────
+async function loadLineageEntities(){
+  const r=await fetch('/api/lineage');
+  const d=await r.json();
+  const sel=document.getElementById('lin-entity');
+  sel.innerHTML='<option value="">Select entity…</option>';
+  (d.entities||[]).forEach(e=>{
+    const o=document.createElement('option'); o.value=o.textContent=e; sel.appendChild(o);
+  });
+  if(d.entities?.length) sel.value=d.entities[0];
+}
+
+async function traceLineage(){
+  const entity=document.getElementById('lin-entity').value;
+  const cutoff=document.getElementById('lin-cutoff').value;
+  const res=document.getElementById('lineage-result');
+  res.innerHTML='<div class="skeleton" style="height:60px;border-radius:8px"></div>';
+
+  const r=await fetch(`/api/lineage?entity=${encodeURIComponent(entity)}&cutoff=${encodeURIComponent(cutoff)}`);
+  const d=await r.json();
+
+  if(d.error||d.message){
+    res.innerHTML=`<div class="empty-state"><div class="empty-icon">💬</div>${d.error||d.message}</div>`; return;
+  }
+
+  const signals=d.signals||[];
+  if(!signals.length){
+    res.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div>No contributing signals found for this entity/cutoff.</div>'; return;
+  }
+
+  res.innerHTML=`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;">
+      <strong>${d.entity_key}</strong> @ ${d.forecast_cutoff} — <span style="color:var(--t2)">${signals.length} contributing signal(s)</span>
+      <span class="chip" style="margin-left:8px">${d.extraction_run_id?.slice(-8)||''}</span>
+    </div>
+    ${signals.map((s,i)=>`
+    <div class="lin-signal-card">
+      <div class="lin-sig-header" onclick="toggleLin(${i})">
+        <div>
+          <div class="lin-sig-title">${fmt(s.signal_type)} — ${dirArrow(s.direction)}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">${s.signal_id}</div>
+        </div>
+        <div class="lin-sig-chips">
+          ${certaintyChip(s.business_certainty)}
+          <span class="chip src">${fmtDate(s.authored_at)}</span>
+          <span style="font-size:16px;color:var(--t3)" id="lin-arrow-${i}">▼</span>
+        </div>
+      </div>
+      <div class="lin-sig-body open" id="lin-body-${i}">
+        <div style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Source note text (evidence span highlighted)</div>
+        <div class="evidence-highlight">${highlightSpan(s.raw_text,s.char_start,s.char_end)}</div>
+        <div style="margin-top:10px" class="kv-grid">
+          ${kv('Source ID',s.source_id)}
+          ${kv('Evidence span',s.evidence_span||'(full note)')}
+        </div>
+      </div>
+    </div>`).join('')}`;
+}
+
+function toggleLin(i){
+  const b=document.getElementById('lin-body-'+i);
+  const a=document.getElementById('lin-arrow-'+i);
+  const open=b.classList.toggle('open');
+  a.textContent=open?'▼':'▶';
+}
+
+// ── Run Pipeline ─────────────────────────────────────────────────
+async function runPipeline(){
+  const btn=document.getElementById('btn-run');
+  const spinner=document.getElementById('run-spinner');
+  if(btn.classList.contains('running')) return;
+  btn.classList.add('running');
+  btn.textContent=' Running…';
+  spinner.style.display='inline-block';
+  btn.prepend(spinner);
+  toast('Pipeline started…',8000);
+  try{
+    const r=await fetch('/api/pipeline/run',{method:'POST'});
+    const d=await r.json();
+    if(d.ok){
+      toast('✓ Pipeline complete — refreshing data');
+      await loadStatus();
+      await loadSignals();
+    } else { toast('Pipeline error: '+(d.error||'unknown')); }
+  } catch(e){ toast('Request failed: '+e.message); }
+  btn.classList.remove('running');
+  btn.innerHTML='▶ Run Pipeline';
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+(async()=>{
+  await loadStatus();
+  await loadSignals();
+})();
+</script>
+</body>
+</html>
