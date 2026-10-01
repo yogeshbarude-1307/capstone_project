@@ -79,7 +79,11 @@ merged signal features (numerically identical to arm A), and `build_d3`
 referenced a column name (`week_start`) that never existed in real D0 output.
 See `docs/13-risks-and-dependencies.md` for the full list.
 
-Verification on Windows / Python 3.13.14: **314 tests passed** (up from 296).
+- **Gradio UI** — `src/dsfs/app.py`. Five-tab local dashboard (Run Pipeline,
+  Forecast Results, Extraction Metrics, Drift Monitoring, Lineage Explorer).
+  Launch with `dsfs-app` after `pip install 'dsfs[ui]'`.
+
+Verification on Windows / Python 3.13.14: **317 tests passed** (up from 315).
 A default D0/D1 → extraction run accepted all 675 records with zero schema
 rejections. This is **schema conformance, not extraction accuracy**. The
 vocabulary is still close to the generator templates; meaningful semantic
@@ -99,6 +103,7 @@ src/dsfs/
   evaluation/                 D2 contracts, metrics, runner, report writer
   features/                   PIT feature transformer, access layer, D3 builder
   forecast/                   4-arm experiment harness, oracle, shuffle, report
+  app.py                      Gradio dashboard (5 tabs, offline localhost UI)
 tests/                        Component and evaluation regression tests
 data/annotations/             Versioned, reviewable D2 labels (tracked)
 data/{raw,interim,processed}/  Generated local artifacts (gitignored)
@@ -129,9 +134,21 @@ one command and writes `reports/manifest.json` with per-artifact and code
 SHA-256 hashes. Use `configs/e2e_full.json` for the default POC scale (40
 entities, 104 weeks) or `configs/e2e_smoke.json` for a fast (~15s) sanity check.
 
+### Gradio dashboard
+
+```bash
+pip install ".[ui]"   # adds gradio>=4.44
+dsfs-app              # opens http://127.0.0.1:7860
+```
+
+Five tabs: **Run Pipeline** (trigger `dsfs-run` from the browser), **Forecast Results**
+(4-arm table + MAE bar chart + ablation matrix), **Extraction Metrics** (F1/precision/recall),
+**Drift Monitoring** (detection/latency/false-alert-rate), and **Lineage Explorer**
+(trace a feature row back to its source notes).
+
 `requirements.txt` installs the package itself and current runtime/test
-requirements. Optional `ner`, `local-llm`, `forecast`, and `tables` extras in
-`pyproject.toml` are future-stage dependencies; installing them does not enable
+requirements. Optional `ner`, `local-llm`, `forecast`, `tables`, and `ui` extras in
+`pyproject.toml` are feature-specific dependencies; installing them does not enable
 unimplemented stages. The LLM flag raises explicitly if enabled.
 
 For the exact tested runtime/test versions, add

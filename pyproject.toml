@@ -15,6 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "numpy>=1.26"]
 ner = ["spacy>=3.7"]
+ui = ["gradio>=4.44"]
 local-llm = ["transformers>=4.44", "torch>=2.3", "sentence-transformers>=3.0"]
 forecast = ["scikit-learn>=1.5", "statsmodels>=0.14", "xgboost>=2.1"]
 tables = ["duckdb>=1.1", "pandera>=0.20"]
@@ -28,6 +29,7 @@ dsfs-forecast = "dsfs.forecast.pipeline:main"
 dsfs-lineage = "dsfs.lineage:main"
 dsfs-drift-report = "dsfs.drift.report:main"
 dsfs-run = "dsfs.orchestrate:main"
+dsfs-app = "dsfs.app:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
