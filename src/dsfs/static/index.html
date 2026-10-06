@@ -94,6 +94,38 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 .kpi-card.red   .kpi-value{color:var(--crit)}
 .kpi-card.amber .kpi-value{color:var(--rev)}
 
+/* ── Overview ────────────────────────────────────────────────── */
+.overview-banner{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,minmax(105px,140px));
+  align-items:center;gap:18px;margin:18px 0 14px;padding:16px 18px;background:var(--crit-bg);
+  border:1px solid var(--crit-border);border-left:4px solid var(--crit);border-radius:var(--radius)}
+.overview-banner.good{background:var(--opp-bg);border-color:var(--opp-border);border-left-color:var(--opp)}
+.overview-banner.neutral{background:var(--rev-bg);border-color:var(--rev-border);border-left-color:var(--rev)}
+.ov-message{display:flex;align-items:flex-start;gap:12px}.ov-alert{width:30px;height:30px;border-radius:50%;
+  display:grid;place-items:center;background:var(--crit);color:#fff;font-size:17px;font-weight:800;flex:0 0 auto}
+.overview-banner.good .ov-alert{background:var(--opp)}.overview-banner.neutral .ov-alert{background:var(--rev)}
+.ov-title{font-size:16px;font-weight:700;line-height:1.3}.ov-copy{font-size:12px;color:var(--t2);margin-top:4px;line-height:1.45}
+.ov-metric{border-left:1px solid rgba(89,102,116,.22);padding-left:16px}
+.ov-metric-label{font-size:10px;text-transform:uppercase;letter-spacing:.55px;color:var(--t2);font-weight:600}
+.ov-metric-value{font-size:20px;font-weight:750;margin-top:3px}.ov-metric-value.bad{color:var(--crit)}
+.overview-grid{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(290px,.8fr);gap:14px;margin-bottom:14px}
+.overview-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.ov-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.ov-panel-title{font-size:15px;font-weight:700}.ov-panel-sub{font-size:11px;color:var(--t2);margin-top:2px}
+.ov-link{border:0;background:none;color:var(--accent);font-size:12px;font-weight:650;cursor:pointer;padding:2px}
+.arm-overview-chart{padding:26px 18px}.ov-bar-row{display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:12px;margin:20px 0}
+.ov-bar-label{font-size:12px;color:var(--t2)}.ov-bar-track{height:18px;border-radius:4px;background:#EDF1EF;overflow:hidden}
+.ov-bar{height:100%;border-radius:4px;background:#7C8793}.ov-bar.oracle{background:var(--accent)}.ov-bar.extracted{background:var(--blue)}.ov-bar.shuffled{background:var(--rev)}
+.ov-bar-value{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.ov-evidence-list{padding:0 16px}.ov-evidence-item{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.ov-evidence-item:last-child{border-bottom:0}.ov-evidence-item:hover .ov-evidence-title{color:var(--accent)}
+.ov-evidence-title{font-size:12px;font-weight:700}.ov-evidence-meta{display:flex;gap:5px;flex-wrap:wrap;margin:5px 0}
+.ov-evidence-copy{font-size:11px;color:var(--t2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.overview-table-wrap{overflow-x:auto}.overview-table{width:100%;border-collapse:collapse;font-size:12px}
+.overview-table th{background:#F4F7F5;color:var(--t3);font-size:10px;text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:9px 12px;border-bottom:1px solid var(--border)}
+.overview-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}.overview-table tr:last-child td{border-bottom:0}
+.overview-table tbody tr:hover{background:#F6FAF8}.ov-account{font-weight:700}.ov-muted{font-size:11px;color:var(--t2)}
+.runs-table td:first-child{font-family:ui-monospace,'Cascadia Mono',monospace;font-size:12px}
+
 /* ── Section header ──────────────────────────────────────────── */
 .section-wrap{margin-bottom:32px}
 .section-header{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
@@ -322,6 +354,8 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   .arm-cards{grid-template-columns:repeat(2,1fr)}
   .st-header,.st-row{grid-template-columns:110px 1fr 150px 145px 110px}
   #status-pill{display:none}
+  .overview-banner{grid-template-columns:minmax(0,1fr) repeat(2,minmax(110px,150px))}.overview-banner .ov-metric:last-child{display:none}
+  .overview-grid{grid-template-columns:1fr}
 }
 @media (max-width:760px){
   body{display:block;height:auto;min-height:100vh;overflow:auto}
@@ -333,6 +367,8 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   #run-selector{min-width:0;max-width:48vw;flex:1}
   #content{overflow:visible;padding:18px 12px 28px}
   .kpi-bar,.stat-row,.arm-cards{grid-template-columns:1fr 1fr}
+  .overview-banner{grid-template-columns:1fr}.ov-metric{border-left:0;border-top:1px solid rgba(89,102,116,.18);padding:10px 0 0}.overview-banner .ov-metric:last-child{display:block}
+  .ov-bar-row{grid-template-columns:105px 1fr 58px}
   .signal-table{overflow-x:auto}.st-header,.st-row{min-width:760px}
   #evidence-panel{width:min(420px,100vw)}
 }
@@ -348,13 +384,17 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
     <div class="sb-brand-sub">Demand Signal<br>Feature Service</div>
   </div>
   <div class="sb-section">Navigation</div>
-  <div class="sb-item active" data-view="signals" onclick="nav(this)">
-    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-    Signal Intelligence
+  <div class="sb-item active" data-view="overview" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Overview
   </div>
   <div class="sb-item" data-view="forecast" onclick="nav(this)">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Forecast Results
+    Forecast Explorer
+  </div>
+  <div class="sb-item" data-view="signals" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Signal Inbox
   </div>
   <div class="sb-item" data-view="extraction" onclick="nav(this)">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -362,11 +402,15 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   </div>
   <div class="sb-item" data-view="drift" onclick="nav(this)">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    Drift Monitor
+    Drift &amp; Freshness
   </div>
   <div class="sb-item" data-view="lineage" onclick="nav(this)">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><line x1="6" y1="9" x2="12" y2="15"/><line x1="18" y1="9" x2="12" y2="15"/></svg>
-    Lineage Tracer
+    Lineage
+  </div>
+  <div class="sb-item" data-view="runs" onclick="nav(this)">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+    Runs
   </div>
   <div class="sb-footer">POC · Offline/Local Only</div>
 </nav>
@@ -376,7 +420,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   <!-- Top bar -->
   <div id="topbar">
     <div class="breadcrumb">
-      <span>DSFS</span> › <span id="breadcrumb-page">Signal Intelligence</span>
+      <span>Demand Signal</span> › <span id="breadcrumb-page">Overview</span>
     </div>
     <div id="status-pill" class="status-pill no-data">
       <span class="dot"></span>
@@ -395,10 +439,38 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   <!-- Content -->
   <div id="content">
 
+    <!-- ── VIEW: Overview ─────────────────────────────────────── -->
+    <div class="view active" id="view-overview">
+      <div class="page-tag">Decision workspace</div>
+      <div class="page-title">Demand Signal Overview</div>
+      <div class="page-sub">Start with forecast performance, then investigate the signals and evidence behind the result.</div>
+
+      <div id="overview-banner" class="overview-banner neutral">
+        <div class="ov-message"><div class="ov-alert">!</div><div><div class="ov-title">Loading evaluation result…</div><div class="ov-copy">Reading the selected completed run.</div></div></div>
+      </div>
+      <div class="kpi-bar" id="overview-kpis"></div>
+
+      <div class="overview-grid">
+        <section class="overview-panel">
+          <div class="ov-panel-head"><div><div class="ov-panel-title">Forecast arm comparison</div><div class="ov-panel-sub">MASE by experiment arm · lower is better</div></div><button class="ov-link" onclick="goToView('forecast')">Open Forecast Explorer →</button></div>
+          <div id="overview-chart" class="arm-overview-chart"><div class="skeleton" style="height:140px"></div></div>
+        </section>
+        <section class="overview-panel">
+          <div class="ov-panel-head"><div><div class="ov-panel-title">Recent signal evidence</div><div class="ov-panel-sub">Accepted demand signals in this run</div></div><button class="ov-link" onclick="goToView('signals')">View all →</button></div>
+          <div id="overview-evidence" class="ov-evidence-list"><div class="skeleton" style="height:160px;margin:16px 0"></div></div>
+        </section>
+      </div>
+
+      <section class="overview-panel">
+        <div class="ov-panel-head"><div><div class="ov-panel-title">Signals requiring attention</div><div class="ov-panel-sub">Demand decreases, review records, and high-magnitude changes</div></div><button class="ov-link" onclick="goToView('signals')">Open Signal Inbox →</button></div>
+        <div id="overview-exceptions" class="overview-table-wrap"><div class="skeleton" style="height:190px;margin:16px"></div></div>
+      </section>
+    </div>
+
     <!-- ── VIEW: Signal Intelligence ───────────────────────────── -->
-    <div class="view active" id="view-signals">
-      <div class="page-tag">Signal Intelligence</div>
-      <div class="page-title">Demand Signal Briefing</div>
+    <div class="view" id="view-signals">
+      <div class="page-tag">Signal Inbox</div>
+      <div class="page-title">Demand Signal Evidence</div>
       <div class="page-sub">Early demand signals extracted from account &amp; sales notes — monitor direction, certainty, and timing.</div>
 
       <div class="kpi-bar" id="kpi-bar">
@@ -447,7 +519,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 
     <!-- ── VIEW: Forecast Results ───────────────────────────────── -->
     <div class="view" id="view-forecast">
-      <div class="page-tag">Forecast Results</div>
+      <div class="page-tag">Forecast Explorer</div>
       <div class="page-title">4-Arm Experiment</div>
       <div class="page-sub">Does adding demand signals improve the forecast? Oracle (B) uses generator interpretations; extracted (C) uses the HTTP feature service.</div>
       <div id="decision-banner" class="decision-banner neutral" style="margin-top:20px">
@@ -491,7 +563,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 
     <!-- ── VIEW: Drift Monitor ──────────────────────────────────── -->
     <div class="view" id="view-drift">
-      <div class="page-tag">Drift Monitor</div>
+      <div class="page-tag">Drift &amp; Freshness</div>
       <div class="page-title">Signal Distribution Monitoring</div>
       <div class="page-sub">Detection outcome, latency (weeks after injection), and calibrated false-alert rate — always reported together. Latency is measured against the known injection week, not confirmed forecast degradation.</div>
       <div class="drift-cards" id="drift-cards" style="margin-top:20px">
@@ -504,7 +576,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 
     <!-- ── VIEW: Lineage Tracer ─────────────────────────────────── -->
     <div class="view" id="view-lineage">
-      <div class="page-tag">Lineage Tracer</div>
+      <div class="page-tag">Lineage</div>
       <div class="page-title">Feature → Signal → Note</div>
       <div class="page-sub">Trace a feature row back to the exact source notes that contributed to it. Every feature value is point-in-time correct: only signals whose <code>available_at ≤ cutoff</code> appear.</div>
       <div class="lineage-controls" style="margin-top:20px">
@@ -519,6 +591,17 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
         <button id="btn-trace" onclick="traceLineage()">Trace ↗</button>
       </div>
       <div class="lineage-result" id="lineage-result"></div>
+    </div>
+
+    <!-- ── VIEW: Runs ─────────────────────────────────────────── -->
+    <div class="view" id="view-runs">
+      <div class="page-tag">Run registry</div>
+      <div class="page-title">Completed Pipeline Runs</div>
+      <div class="page-sub">Choose one immutable evidence bundle to use across every dashboard view.</div>
+      <div class="overview-panel" style="margin-top:20px">
+        <div class="ov-panel-head"><div><div class="ov-panel-title">Available runs</div><div class="ov-panel-sub">The selected run controls all metrics, signals, drift results, and lineage.</div></div></div>
+        <div id="runs-view-table" class="overview-table-wrap"><div class="skeleton" style="height:220px;margin:16px"></div></div>
+      </div>
     </div>
 
   </div><!-- /content -->
@@ -544,10 +627,11 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 // ── State ──────────────────────────────────────────────────────
 let _signals = [];
 let _filtered = [];
+let _runs = [];
 
 // ── Navigation ──────────────────────────────────────────────────
-const viewTitles = {signals:'Signal Intelligence',forecast:'Forecast Results',
-  extraction:'Extraction Quality',drift:'Drift Monitor',lineage:'Lineage Tracer'};
+const viewTitles = {overview:'Overview',forecast:'Forecast Explorer',signals:'Signal Inbox',
+  extraction:'Extraction Quality',drift:'Drift & Freshness',lineage:'Lineage',runs:'Runs'};
 
 function nav(el){
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
@@ -556,10 +640,18 @@ function nav(el){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   document.getElementById('breadcrumb-page').textContent = viewTitles[v];
+  document.getElementById('content').scrollTop=0;
+  if(v==='overview') loadOverview();
   if(v==='forecast') loadForecast();
   if(v==='extraction') loadExtraction();
   if(v==='drift') loadDrift();
   if(v==='lineage') loadLineageEntities();
+  if(v==='runs') loadRunsView();
+}
+
+function goToView(view){
+  const item=document.querySelector(`.sb-item[data-view="${view}"]`);
+  if(item) nav(item);
 }
 
 // ── Toast ───────────────────────────────────────────────────────
@@ -574,6 +666,7 @@ let selectedRun='';
 function apiURL(path){return path+(path.includes('?')?'&':'?')+'run_id='+encodeURIComponent(selectedRun);}
 async function loadRuns(preferred=''){
   const response=await fetch('/api/runs');const runs=await response.json();
+  _runs=runs;
   const selector=document.getElementById('run-selector');selector.replaceChildren();
   for(const run of runs){const option=document.createElement('option');option.value=run.run_id;option.textContent=run.run_id;selector.appendChild(option);}
   selectedRun=runs.some(r=>r.run_id===preferred)?preferred:(runs[0]?.run_id||'');
@@ -581,7 +674,8 @@ async function loadRuns(preferred=''){
 }
 async function selectRun(run){
   selectedRun=run;closePanel();
-  await Promise.all([loadStatus(),loadSignals(),loadForecast(),loadExtraction(),loadDrift(),loadLineageEntities()]);
+  await Promise.all([loadStatus(),loadSignals(),loadOverview(),loadForecast(),loadExtraction(),loadDrift(),loadLineageEntities()]);
+  loadRunsView();
 }
 async function loadStatus(){
   try{
@@ -633,6 +727,93 @@ function certaintyChip(c){
   return `<span class="chip ${map[c]||'chip src'}">${c||'UNKNOWN'}</span>`;
 }
 
+// ── Overview ────────────────────────────────────────────────────
+async function loadOverview(){
+  try{
+    const [statusR,forecastR,signalsR,driftR]=await Promise.all([
+      fetch(apiURL('/api/status')),fetch(apiURL('/api/forecast')),
+      fetch(apiURL('/api/signals')),fetch(apiURL('/api/drift')),
+    ]);
+    const [status,forecast,signals,drift]=await Promise.all([
+      statusR.json(),forecastR.json(),signalsR.json(),driftR.json(),
+    ]);
+    if(forecast.error) throw new Error(forecast.error);
+
+    const paired=forecast.uncertainty?.C?.point;
+    const pairedPct=paired!=null?paired*100:null;
+    const positive=pairedPct!=null&&pairedPct>0;
+    const banner=document.getElementById('overview-banner');
+    banner.className=`overview-banner ${pairedPct==null?'neutral':positive?'good':'bad'}`;
+    banner.innerHTML=`
+      <div class="ov-message"><div class="ov-alert">${positive?'✓':'!'}</div><div>
+        <div class="ov-title">${pairedPct==null?'Forecast lift is unavailable for this run':positive?'Extracted signals improved this evaluation':'Extracted signals did not beat the tabular baseline'}</div>
+        <div class="ov-copy">${pairedPct==null?'The selected run does not contain a paired MASE estimate.':positive?'The signal-augmented model reduced paired MASE. Review the evidence before using the result.':'The signal-augmented forecast had higher paired error. Investigate representation and signal exposure before expanding extraction technology.'}</div>
+      </div></div>
+      <div class="ov-metric"><div class="ov-metric-label">Baseline MASE</div><div class="ov-metric-value">${fmtNum(forecast.A?.mase,4)}</div></div>
+      <div class="ov-metric"><div class="ov-metric-label">Extracted MASE</div><div class="ov-metric-value">${fmtNum(forecast.C?.mase,4)}</div></div>
+      <div class="ov-metric"><div class="ov-metric-label">Paired MASE lift</div><div class="ov-metric-value ${pairedPct!=null&&!positive?'bad':''}">${pairedPct!=null?(pairedPct>0?'+':'')+pairedPct.toFixed(2)+'%':'Unavailable'}</div></div>`;
+
+    const fresh=status.freshness||{};
+    document.getElementById('overview-kpis').innerHTML=`
+      <div class="kpi-card"><div class="kpi-label">Baseline MASE</div><div class="kpi-value">${fmtNum(forecast.A?.mase,4)}</div><div class="kpi-sub">Tabular demand model</div></div>
+      <div class="kpi-card"><div class="kpi-label">Extracted MASE</div><div class="kpi-value">${fmtNum(forecast.C?.mase,4)}</div><div class="kpi-sub">With demand signals</div></div>
+      <div class="kpi-card ${positive?'green':'red'}"><div class="kpi-label">Paired lift</div><div class="kpi-value">${pairedPct!=null?(pairedPct>0?'+':'')+pairedPct.toFixed(2)+'%':'—'}</div><div class="kpi-sub">Lower MASE is better</div></div>
+      <div class="kpi-card ${(fresh.breach_count||0)>0?'amber':'green'}"><div class="kpi-label">Freshness breaches</div><div class="kpi-value">${fresh.breach_count??'—'}</div><div class="kpi-sub">Target ${fresh.target_minutes??60} simulated min</div></div>
+      <div class="kpi-card"><div class="kpi-label">Drift warning lead</div><div class="kpi-value">${drift.lead_time_weeks!=null?drift.lead_time_weeks+' wks':'—'}</div><div class="kpi-sub">${drift.lead_time_weeks!=null?'Before confirmed degradation':'Unavailable in selected run'}</div></div>`;
+
+    const arms=[['A','Tabular baseline',''],['B','Oracle interpretation','oracle'],['C','Extracted signals','extracted'],['D','Shuffled control','shuffled']];
+    const maxMase=Math.max(...arms.map(([key])=>forecast[key]?.mase||0),1);
+    document.getElementById('overview-chart').innerHTML=arms.map(([key,label,cls])=>{
+      const value=forecast[key]?.mase;
+      const width=value!=null?Math.max(3,value/maxMase*100):0;
+      return `<div class="ov-bar-row"><div class="ov-bar-label"><strong>Arm ${key}</strong> · ${label}</div><div class="ov-bar-track"><div class="ov-bar ${cls}" style="width:${width}%"></div></div><div class="ov-bar-value">${fmtNum(value,4)}</div></div>`;
+    }).join('');
+
+    const demandSignals=signals.filter(s=>s.impact_channel==='DEMAND'&&s.signal_type!=='NO_SIGNAL'&&s.validation_status==='PASS');
+    const recent=[...demandSignals].sort((a,b)=>String(b.authored_at).localeCompare(String(a.authored_at))).slice(0,3);
+    document.getElementById('overview-evidence').innerHTML=recent.length?recent.map(s=>`
+      <div class="ov-evidence-item" onclick="openSignalPanel('${s.signal_id}')">
+        <div class="ov-evidence-title">${fmt(s.signal_type)}</div>
+        <div class="ov-evidence-meta"><span class="chip">${esc(s.forecast_key||s.resolved_entities?.[0]||'Unresolved')}</span><span class="chip demand">DEMAND</span>${certaintyChip(s.business_certainty)}</div>
+        <div class="ov-evidence-copy">${esc(s.raw_text||'')}</div>
+      </div>`).join(''):'<div class="empty-state">No accepted demand signals in this run.</div>';
+
+    const ranked=[...signals].filter(s=>s.signal_type!=='NO_SIGNAL').sort((a,b)=>{
+      const score=s=>(s.validation_status==='REVIEW'?100:0)+(s.direction==='DECREASE'?50:0)+(Number(s.magnitude_value)||0);
+      return score(b)-score(a);
+    }).slice(0,6);
+    document.getElementById('overview-exceptions').innerHTML=ranked.length?`<table class="overview-table"><thead><tr><th>Account</th><th>Signal</th><th>Direction</th><th>Magnitude</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>${ranked.map(s=>`<tr>
+      <td><div class="ov-account">${esc(s.forecast_key||s.resolved_entities?.[0]||'Unresolved')}</div><div class="ov-muted">${fmtDate(s.authored_at)}</div></td>
+      <td>${fmt(s.signal_type)}</td><td>${dirArrow(s.direction)}</td><td>${s.magnitude_value!=null?esc(s.magnitude_value)+' '+esc(s.magnitude_unit||''):'—'}</td>
+      <td>${fmt(s.source_type)}</td><td><span class="badge ${badgeClass(s)}"><span class="bdot"></span>${badgeLabel(s)}</span></td>
+      <td><button class="btn-evidence" onclick="openSignalPanel('${s.signal_id}')">Review</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">No signals require attention.</div>';
+  } catch(e){
+    console.error(e);
+    document.getElementById('overview-banner').innerHTML='<div class="ov-message"><div class="ov-alert">!</div><div><div class="ov-title">Overview unavailable</div><div class="ov-copy">The selected run could not be loaded.</div></div></div>';
+  }
+}
+
+function openSignalPanel(signalId){
+  const signal=_signals.find(s=>s.signal_id===signalId);
+  if(signal) showEvidence(signal); else goToView('signals');
+}
+
+function loadRunsView(){
+  const wrap=document.getElementById('runs-view-table');
+  if(!wrap) return;
+  wrap.innerHTML=_runs.length?`<table class="overview-table runs-table"><thead><tr><th>Run ID</th><th>Completed</th><th>State</th><th></th></tr></thead><tbody>${_runs.map(run=>`<tr>
+    <td>${esc(run.run_id)}</td><td>${esc((run.finished_at||'—').replace('T',' ').slice(0,19))}</td>
+    <td>${run.run_id===selectedRun?'<span class="badge opp"><span class="bdot"></span>Selected</span>':'<span class="badge abs"><span class="bdot"></span>Complete</span>'}</td>
+    <td><button class="btn-evidence" ${run.run_id===selectedRun?'disabled style="opacity:.5;cursor:default"':`onclick="chooseRun('${run.run_id}')"`}>${run.run_id===selectedRun?'Current':'Open run'}</button></td>
+  </tr>`).join('')}</tbody></table>`:'<div class="empty-state">No completed runs found.</div>';
+}
+
+async function chooseRun(runId){
+  document.getElementById('run-selector').value=runId;
+  await selectRun(runId);
+  goToView('overview');
+}
+
 // ── Signal Intelligence ──────────────────────────────────────────
 async function loadSignals(){
   try{
@@ -649,6 +830,8 @@ function buildFilterOptions(){
   const types=[...new Set(_signals.map(s=>s.signal_type).filter(Boolean))].sort();
   const esel=document.getElementById('f-entity');
   const tsel=document.getElementById('f-type');
+  esel.innerHTML='<option value="">All Entities</option>';
+  tsel.innerHTML='<option value="">All Signal Types</option>';
   entities.forEach(e=>{ const o=document.createElement('option');o.value=o.textContent=e;esel.appendChild(o); });
   types.forEach(t=>{ const o=document.createElement('option');o.value=o.textContent=t;tsel.appendChild(o); });
 }
@@ -734,6 +917,10 @@ function renderSignalRows(){
 // ── Evidence panel ───────────────────────────────────────────────
 function openPanel(i){
   const s=_filtered[i];
+  if(s) showEvidence(s);
+}
+
+function showEvidence(s){
   document.getElementById('ep-title').textContent=`${fmt(s.signal_type)} — ${s.forecast_key||''}`;
   document.getElementById('ep-sub').textContent=`Signal ID: ${s.signal_id}`;
 
@@ -1033,6 +1220,8 @@ async function runPipeline(){
       await loadRuns(d.run_id);
       await loadStatus();
       await loadSignals();
+      await loadOverview();
+      loadRunsView();
     } else { toast('Pipeline error: '+(d.error||'unknown')); }
   } catch(e){ toast('Request failed: '+e.message); }
   btn.classList.remove('running');
@@ -1044,6 +1233,8 @@ async function runPipeline(){
   await loadRuns();
   await loadStatus();
   await loadSignals();
+  await loadOverview();
+  loadRunsView();
 })();
 </script>
 </body>

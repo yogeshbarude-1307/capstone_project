@@ -1,48 +1,57 @@
 **Comparison Target**
 
 - Source visual truth: `C:\Users\Ashvath.Diniz\.codex\generated_images\01a10aac-4f5c-7ea2-b6d5-fdad8d3bbc7e\exec-aded9387-b7e6-48a3-985a-3d7c4059c08f.png`
-- Browser-rendered implementation: `D:\dev\capstone_project\reports\dashboard-option-2.png`
-- Side-by-side evidence: `D:\dev\capstone_project\reports\dashboard-option-2-comparison.png`
-- Responsive evidence: `D:\dev\capstone_project\reports\dashboard-option-2-mobile.png`
+- Browser-rendered implementation: `D:\dev\capstone_project\reports\dashboard-overview-v2.png`
+- Side-by-side evidence: `D:\dev\capstone_project\reports\dashboard-overview-v2-comparison.png`
+- Responsive evidence: `D:\dev\capstone_project\reports\dashboard-overview-v2-mobile.png`
 - Desktop viewport: 1440 x 1024 CSS pixels at browser density 1.
 - Source pixels: 1487 x 1058, normalized to 1440 x 1024 for comparison.
 - Implementation pixels: 1440 x 1024.
 - Responsive viewport and capture: 720 x 900 CSS pixels at browser density 1.
-- State: completed local run loaded on the Signal Intelligence view. The mock's forecast overview content was treated as information-architecture inspiration; this pass implements its selected graphite-and-emerald visual system across the existing working dashboard.
+- State: selected completed local run on the new Overview screen.
 
 **Findings**
 
-- No actionable P0, P1, or P2 differences remain within the approved color-and-professional-finish scope.
-- Typography uses Segoe UI Variable/Segoe UI rather than the mock's approximate Source Sans style. The metrics, labels, and table copy preserve the same compact enterprise hierarchy and remain readable at both tested viewports.
-- Spacing and layout retain the product's existing five-column signal table and working views. Panel density, 7 px radii, restrained shadows, borders, and 8 px-based spacing closely follow the mock's visual rhythm.
-- Colors map directly to the selected direction: graphite `#20262E`, emerald `#047857`, warm off-white `#F6F7F5`, white surfaces, muted crimson for critical states, amber for review, and steel blue where already used by charts.
-- The screen has no photographic or illustrative assets. Existing product icons remain sharp at the tested viewport, and no new raster assets or placeholders were introduced.
-- Existing app-specific copy and live run values were preserved so the redesign does not invent results or alter the dashboard contract.
+- No actionable P0, P1, or P2 differences remain for the approved product-overview direction.
+- The implemented screen now follows the source hierarchy: decision banner, five KPI cards, a dominant forecast region, recent evidence rail, exception table, and workflow-oriented navigation.
+- The source shows an actual-versus-forecast time series. The current dashboard API exposes aggregate arm metrics rather than point-level forecast series, so the implementation truthfully compares MASE across all four arms. Adding a time-series endpoint is a separate data-contract enhancement.
+- Typography uses Segoe UI Variable/Segoe UI rather than the mock's approximate Source Sans style. Hierarchy, density, wrapping, and numeric emphasis are visually equivalent.
+- Spacing and layout match the source's compact enterprise rhythm: graphite sidebar, 7 px radii, restrained shadows, thin borders, five-column KPI row, two-column analysis region, and full-width exceptions panel.
+- Colors map directly to the selected direction: graphite `#20262E`, emerald `#047857`, warm off-white `#F6F7F5`, white surfaces, muted crimson for negative evaluation results, amber for the shuffled control, and steel blue for extracted features.
+- No photographic or illustrative assets are present. Existing product icons remain sharp, and the redesign introduced no asset placeholders.
+- App-specific copy and values come from the selected run. Unavailable drift lead time is shown as unavailable rather than inferred.
 
 **Open Questions**
 
-- The selected concept also proposes a new Overview screen containing forecast, exception, and evidence regions. That information-architecture change is outside this color pass and can be implemented as a separate functional iteration.
+- A later backend iteration can expose account/cutoff forecast traces so the Overview can show the source design's actual-versus-forecast line chart.
 
 **Implementation Checklist**
 
-- [x] Apply graphite-and-emerald tokens to all existing views.
-- [x] Improve control, hover, active, and keyboard-focus states.
-- [x] Restyle run and freshness controls without changing API behavior.
-- [x] Add responsive desktop/tablet/mobile behavior.
-- [x] Verify navigation, filtering, and evidence drawer interactions.
+- [x] Add a working Overview backed by status, forecast, signal, and drift APIs.
+- [x] Add truthful evaluation banner and five operational KPIs.
+- [x] Add four-arm forecast comparison, recent evidence rail, and ranked exception table.
+- [x] Align navigation to Overview, Forecast Explorer, Signal Inbox, Extraction Quality, Drift & Freshness, Lineage, and Runs.
+- [x] Add a functional immutable-run registry.
+- [x] Preserve filters, evidence drawer, lineage, drift, extraction, and pipeline controls.
+- [x] Reset scroll position when changing views.
+- [x] Verify desktop and responsive layouts.
+- [x] Verify navigation, overview links, signal evidence, and run registry interactions.
 - [x] Check browser console errors.
 - [x] Run the complete automated test suite.
 
 **Comparison History**
 
-- Pass 1: full-view and focused table/control comparison found no P0/P1/P2 issue within the selected styling scope. No corrective visual iteration was required.
-- Browser interactions tested: Forecast Results navigation, return to Signal Intelligence, note search filtering, evidence drawer open, and evidence drawer close.
+- Pass 1: the selected palette was applied to the existing Signal Intelligence screen. The palette passed, but the screen hierarchy remained materially different from the selected product direction.
+- Pass 2: added the new Overview, workflow navigation, evidence rail, exception queue, and Runs view. Browser inspection found view scroll position persisted when switching from a long page.
+- Fix: navigation now resets the content viewport to the top.
+- Pass 3: browser evidence confirms the Overview starts at the correct position; desktop and 720 px responsive layouts have no clipped persistent controls or broken regions.
+- Browser interactions tested: Overview to Forecast Explorer, return to Overview, recent evidence drawer open/close, Runs navigation, run table rendering, Signal Inbox navigation, search filtering, and evidence review.
 - Console errors: none.
-- Automated tests: 337 passed, 1 dependency deprecation warning.
+- Automated tests: 337 passed, with one dependency deprecation warning.
 
 **Follow-up Polish**
 
-- P3: replace the inherited emoji brand mark with a formal brand asset when a logo is available.
-- P3: consider the concept's combined forecast-and-exceptions Overview as the next product-flow iteration.
+- P3: replace the inherited emoji brand mark with a formal brand asset when one is available.
+- P3: add point-level forecast traces when the backend contract supports them.
 
 final result: passed
