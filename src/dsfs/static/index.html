@@ -283,7 +283,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 .f1-low{color:var(--crit);font-weight:600}
 
 /* ── Extraction view ─────────────────────────────────────────── */
-.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 .stat-card{background:var(--card);border:1px solid var(--border);
   border-radius:var(--radius);padding:18px;text-align:center;box-shadow:var(--shadow)}
 .stat-card .big{font-size:32px;font-weight:800;color:var(--t1)}
@@ -294,6 +294,13 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 .caveat-box strong{display:block;margin-bottom:4px}
 .limitations{list-style:disc;padding-left:18px;font-size:12px;color:var(--t2);margin-top:8px}
 .limitations li{margin-bottom:4px}
+.review-panel{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);
+  border-radius:var(--radius);padding:14px 16px;margin-bottom:24px;box-shadow:var(--shadow)}
+.review-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+.review-panel-title{font-size:14px;font-weight:700}.review-panel-copy{font-size:12px;color:var(--t2);margin-top:3px;line-height:1.45}
+.review-cohorts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.review-cohort{background:#F4F7F5;border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.review-cohort-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);margin-bottom:6px}
+.review-metrics{display:flex;gap:18px;flex-wrap:wrap}.review-metric strong{display:block;font-size:16px}.review-metric span{font-size:10px;color:var(--t3)}
 
 /* ── Drift view ──────────────────────────────────────────────── */
 .drift-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
@@ -356,6 +363,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   #status-pill{display:none}
   .overview-banner{grid-template-columns:minmax(0,1fr) repeat(2,minmax(110px,150px))}.overview-banner .ov-metric:last-child{display:none}
   .overview-grid{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:760px){
   body{display:block;height:auto;min-height:100vh;overflow:auto}
@@ -367,6 +375,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   #run-selector{min-width:0;max-width:48vw;flex:1}
   #content{overflow:visible;padding:18px 12px 28px}
   .kpi-bar,.stat-row,.arm-cards{grid-template-columns:1fr 1fr}
+  .review-cohorts{grid-template-columns:1fr}
   .overview-banner{grid-template-columns:1fr}.ov-metric{border-left:0;border-top:1px solid rgba(89,102,116,.18);padding:10px 0 0}.overview-banner .ov-metric:last-child{display:block}
   .ov-bar-row{grid-template-columns:105px 1fr 58px}
   .signal-table{overflow-x:auto}.st-header,.st-row{min-width:760px}
@@ -554,6 +563,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
         <div class="stat-card"><div class="big skeleton" style="height:40px;width:60px;margin:auto"> </div><div class="lbl">Accepted Signals</div></div>
         <div class="stat-card"><div class="big skeleton" style="height:40px;width:60px;margin:auto"> </div><div class="lbl">Quarantined</div></div>
       </div>
+      <div id="review-status"></div>
       <div class="section-wrap">
         <div class="section-title" style="font-size:15px;margin-bottom:10px">Field-level Metrics</div>
         <div id="ext-table-wrap"><div class="skeleton" style="height:200px"></div></div>
@@ -1062,6 +1072,29 @@ async function loadExtraction(){
       <div class="stat-card"><div class="big ${(d.quarantined||0)>0?'':'green'}">${d.quarantined||0}</div><div class="lbl">Quarantined</div></div>
       <div class="stat-card"><div class="big">${d.n_notes||'—'}</div><div class="lbl">Eval Dataset Size</div></div>`;
 
+    const independent=d.independent_review||{};
+    const aiDraft=independent.ai_draft;
+    const aiViews=aiDraft?.views||[];
+    const reviewStatus=document.getElementById('review-status');
+    if(aiDraft){
+      reviewStatus.innerHTML=`<div class="review-panel">
+        <div class="review-panel-head"><div><div class="review-panel-title">Cross-model AI draft review</div>
+        <div class="review-panel-copy">Claude relabeled all 50 blind cases. Provenance is <strong>assistant_draft / draft</strong>; independent human review remains pending.</div></div>
+        <span class="badge rev"><span class="bdot"></span>PROVISIONAL</span></div>
+        <div class="review-cohorts">${aiViews.map(v=>{
+          const m=v.metrics||{};const count=m.signal_type?.accuracy?.denominator??0;
+          const typeAcc=m.signal_type?.accuracy?.value;const dirAcc=m.direction?.accuracy?.value;
+          const coverage=m.grounding?.evidence_span_coverage?.value;
+          return `<div class="review-cohort"><div class="review-cohort-title">${fmt(v.sample)} · ${count} notes</div><div class="review-metrics">
+            <div class="review-metric"><strong>${typeAcc!=null?(typeAcc*100).toFixed(1)+'%':'N/A'}</strong><span>Signal type accuracy</span></div>
+            <div class="review-metric"><strong>${dirAcc!=null?(dirAcc*100).toFixed(1)+'%':'N/A'}</strong><span>Direction accuracy</span></div>
+            <div class="review-metric"><strong>${coverage!=null?(coverage*100).toFixed(1)+'%':'N/A'}</strong><span>Evidence coverage</span></div>
+          </div></div>`;
+        }).join('')}</div></div>`;
+    } else {
+      reviewStatus.innerHTML=`<div class="review-panel"><div class="review-panel-title">Independent review pending</div><div class="review-panel-copy">The 35 natural-prevalence and 15 challenge cases have not yet been reviewed by an independent person.</div></div>`;
+    }
+
     // Metrics table
     const metrics=d.metrics?.fields||{};
     const rows=Object.entries(metrics).map(([name,v])=>{
@@ -1088,7 +1121,8 @@ async function loadExtraction(){
     const lims=d.limitations||[];
     cavDiv.innerHTML=`<div class="caveat-box">
       <strong>⚠ Important limitations</strong>
-      ${d.independent_review?.status==='reviewed'?`<p>Independent human single review: 35 natural-prevalence and 15 challenge notes, reported separately.</p><pre>${esc(JSON.stringify(d.independent_review.views,null,2))}</pre>`:`<p>Independent review: ${esc(d.independent_review?.status||'not prepared for this run')}. Semantic accuracy remains unavailable.</p>`}
+      ${independent.status==='reviewed'?`<p>Independent human single review: 35 natural-prevalence and 15 challenge notes, reported separately.</p>`:`<p>Independent human review: ${esc(independent.status||'not prepared for this run')}. The acceptance requirement remains open.</p>`}
+      ${aiDraft?'<p>A separate cross-model AI draft is shown above for diagnostic comparison only.</p>':''}
       ${d.provisional?'<p>These are <strong>provisional self-scored labels</strong>, not independently human-adjudicated gold.</p>':''}
       <ul class="limitations">${lims.map(l=>`<li>${l}</li>`).join('')}</ul>
     </div>`;

@@ -59,6 +59,8 @@ The controlled experiment used seed 901 with 40 accounts x 104 weeks. It deliber
 
 The rules-v0.3.0 extractor was frozen before selecting **35 natural-prevalence and 15 challenge notes**. Related cases share lifecycle context. The reviewer package contains source text, timestamps, entity mentions and preceding notes; it contains no generator truth or extractor predictions. Challenge coverage includes vague dates, negation, conditionality, cancellations and ambiguous references.
 
+A separate **cross-model AI draft** from Claude has now been validated and evaluated. It contains all 50 cases with `assistant_draft / draft` provenance, no TODO placeholders, unchanged blind source material, and 341 valid evidence spans. The dashboard reports its natural-prevalence and challenge metrics as provisional diagnostics. This does not complete the independent-person requirement, which remains open.
+
 Provide only these blind materials to the independent reviewer:
 - `reports/runs/run-20261005T083131-fdcd6526/reports/review/review_dataset.json`
 - The adjacent `REVIEW_INSTRUCTIONS.md`
@@ -76,7 +78,7 @@ The evaluator rejects unfinished labels and reports the natural-prevalence and c
 
 Run `./.venv/Scripts/dsfs-server.exe`, open `http://127.0.0.1:8000`, and select **`run-20261005T083131-fdcd6526`** in the run selector. This completed 40-account frozen run includes HTTP evidence, freshness, matched drift, lineage and the blind review package. The latest completed run after `dsfs-study` is a ten-account ablation, so select the specified run for the full demonstration.
 
-The forecast view shows its paired intervals and breakdowns; the extraction view distinguishes provisional scores and pending human review; the drift view shows the 14-week lead and 30% false-alert rate. The lineage view supplies a valid Monday cutoff and resolves contributing source spans.
+The forecast view shows its paired intervals and breakdowns; the extraction view distinguishes the Claude cross-model draft from pending human review; the drift view shows the 14-week lead and 30% false-alert rate. The lineage view supplies a valid Monday cutoff and resolves contributing source spans.
 
 For a newly generated complete demonstration, use `./.venv/Scripts/dsfs-run.exe --config configs/e2e_full.json`. For the complete development/frozen study use `./.venv/Scripts/dsfs-study.exe`. Historical counts and results in documents 00-19 are prior evidence, not this study.
 

@@ -133,19 +133,35 @@ def _independent_review(manifest):
     metadata = manifest.get("steps", {}).get("independent_review", {})
     if not metadata: return {"status": "not_prepared"}
     root = _settings().reports_dir / "independent-reviews" / manifest["run_id"]
+    ai_draft = None
+    human_review = None
     for path in sorted(root.glob("*/report.json"), reverse=True):
         report = json.loads(path.read_text(encoding="utf-8"))
         snapshot = json.loads(path.with_name("dataset_snapshot.json").read_text(encoding="utf-8"))
         original = json.loads(Path(metadata["path"]).read_text(encoding="utf-8"))
         ids = lambda d: {c["evidence"]["source_id"]: c["evidence"] for c in d["cases"]}
         if ids(snapshot) != ids(original): continue
-        if report.get("provisional") or report.get("annotation_status") != {"human_single": 50}: continue
         if report.get("extractor_version") != metadata["extractor_version"]: continue
-        if len(report.get("reviewer_ids",[])) != 1: continue
         if report.get("code_sha256") != metadata.get("code_sha256"): continue
-        return {"status": "reviewed", "provenance": "independent single-person review (declared)",
-                "views": report["views"], "report_path": str(path)}
-    return metadata
+        if report.get("provisional") and report.get("annotation_status") == {"provisional": 50}:
+            annotators = sorted({annotator for case in snapshot.get("cases", [])
+                                 if case.get("label_origin") == "assistant_draft"
+                                 for annotator in case.get("annotator_ids", [])})
+            if len(annotators) == 1:
+                ai_draft = {"status": "evaluated", "provenance": "cross-model AI draft",
+                            "annotator_ids": annotators, "views": report["views"],
+                            "report_path": str(path), "provisional": True}
+            continue
+        if report.get("annotation_status") != {"human_single": 50}: continue
+        if len(report.get("reviewer_ids",[])) != 1: continue
+        human_review = {"status": "reviewed", "provenance": "independent single-person review (declared)",
+                        "views": report["views"], "report_path": str(path)}
+    if human_review:
+        if ai_draft: human_review["ai_draft"] = ai_draft
+        return human_review
+    result = dict(metadata)
+    if ai_draft: result["ai_draft"] = ai_draft
+    return result
 
 
 def _load_lineage(entity_key: str, cutoff_str: str, run_id=None) -> dict:
