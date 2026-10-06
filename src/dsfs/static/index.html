@@ -116,6 +116,10 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 .ov-bar-label{font-size:12px;color:var(--t2)}.ov-bar-track{height:18px;border-radius:4px;background:#EDF1EF;overflow:hidden}
 .ov-bar{height:100%;border-radius:4px;background:#7C8793}.ov-bar.oracle{background:var(--accent)}.ov-bar.extracted{background:var(--blue)}.ov-bar.shuffled{background:var(--rev)}
 .ov-bar-value{font-size:12px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.trace-toolbar{display:flex;align-items:center;gap:8px}.trace-toolbar select{border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--t1);padding:6px 28px 6px 9px;font-size:11px;max-width:150px}
+.trace-chart{padding:10px 16px 12px}.trace-chart svg{display:block;width:100%;height:245px}.trace-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:10px;color:var(--t2);margin-bottom:4px}
+.trace-legend span{display:inline-flex;align-items:center;gap:5px}.trace-swatch{width:18px;height:3px;border-radius:2px;background:#17212B}.trace-swatch.baseline{background:#3B82F6}.trace-swatch.augmented{background:#047857}
+.trace-note{font-size:10px;color:var(--t3);line-height:1.4;margin-top:2px}.trace-arm-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}.trace-arm{background:#F4F7F5;border:1px solid var(--border);border-radius:5px;padding:7px 9px;font-size:10px;color:var(--t2)}.trace-arm strong{display:block;color:var(--t1);font-size:12px;margin-top:2px}
 .ov-evidence-list{padding:0 16px}.ov-evidence-item{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
 .ov-evidence-item:last-child{border-bottom:0}.ov-evidence-item:hover .ov-evidence-title{color:var(--accent)}
 .ov-evidence-title{font-size:12px;font-weight:700}.ov-evidence-meta{display:flex;gap:5px;flex-wrap:wrap;margin:5px 0}
@@ -378,6 +382,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
   .review-cohorts{grid-template-columns:1fr}
   .overview-banner{grid-template-columns:1fr}.ov-metric{border-left:0;border-top:1px solid rgba(89,102,116,.18);padding:10px 0 0}.overview-banner .ov-metric:last-child{display:block}
   .ov-bar-row{grid-template-columns:105px 1fr 58px}
+  .trace-toolbar{align-items:flex-end;flex-direction:column}.trace-chart svg{height:220px}.trace-arm-summary{grid-template-columns:repeat(2,1fr)}
   .signal-table{overflow-x:auto}.st-header,.st-row{min-width:760px}
   #evidence-panel{width:min(420px,100vw)}
 }
@@ -461,7 +466,7 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 
       <div class="overview-grid">
         <section class="overview-panel">
-          <div class="ov-panel-head"><div><div class="ov-panel-title">Forecast arm comparison</div><div class="ov-panel-sub">MASE by experiment arm · lower is better</div></div><button class="ov-link" onclick="goToView('forecast')">Open Forecast Explorer →</button></div>
+          <div class="ov-panel-head"><div><div class="ov-panel-title">Forecast vs. actual demand</div><div class="ov-panel-sub">Illustrative weekly account trace · headline metrics use the measured experiment</div></div><div class="trace-toolbar"><select id="overview-account" aria-label="Overview account" onchange="renderOverviewTrace()"></select><button class="ov-link" onclick="goToView('forecast')">Open Forecast Explorer →</button></div></div>
           <div id="overview-chart" class="arm-overview-chart"><div class="skeleton" style="height:140px"></div></div>
         </section>
         <section class="overview-panel">
@@ -638,6 +643,8 @@ select:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid 
 let _signals = [];
 let _filtered = [];
 let _runs = [];
+let _overviewForecast = {};
+const PRESENTATION_RUN='run-20261005T083131-fdcd6526';
 
 // ── Navigation ──────────────────────────────────────────────────
 const viewTitles = {overview:'Overview',forecast:'Forecast Explorer',signals:'Signal Inbox',
@@ -679,7 +686,8 @@ async function loadRuns(preferred=''){
   _runs=runs;
   const selector=document.getElementById('run-selector');selector.replaceChildren();
   for(const run of runs){const option=document.createElement('option');option.value=run.run_id;option.textContent=run.run_id;selector.appendChild(option);}
-  selectedRun=runs.some(r=>r.run_id===preferred)?preferred:(runs[0]?.run_id||'');
+  selectedRun=runs.some(r=>r.run_id===preferred)?preferred:
+    (runs.some(r=>r.run_id===PRESENTATION_RUN)?PRESENTATION_RUN:(runs[0]?.run_id||''));
   selector.value=selectedRun;
 }
 async function selectRun(run){
@@ -771,13 +779,13 @@ async function loadOverview(){
       <div class="kpi-card ${(fresh.breach_count||0)>0?'amber':'green'}"><div class="kpi-label">Freshness breaches</div><div class="kpi-value">${fresh.breach_count??'—'}</div><div class="kpi-sub">Target ${fresh.target_minutes??60} simulated min</div></div>
       <div class="kpi-card"><div class="kpi-label">Drift warning lead</div><div class="kpi-value">${drift.lead_time_weeks!=null?drift.lead_time_weeks+' wks':'—'}</div><div class="kpi-sub">${drift.lead_time_weeks!=null?'Before confirmed degradation':'Unavailable in selected run'}</div></div>`;
 
-    const arms=[['A','Tabular baseline',''],['B','Oracle interpretation','oracle'],['C','Extracted signals','extracted'],['D','Shuffled control','shuffled']];
-    const maxMase=Math.max(...arms.map(([key])=>forecast[key]?.mase||0),1);
-    document.getElementById('overview-chart').innerHTML=arms.map(([key,label,cls])=>{
-      const value=forecast[key]?.mase;
-      const width=value!=null?Math.max(3,value/maxMase*100):0;
-      return `<div class="ov-bar-row"><div class="ov-bar-label"><strong>Arm ${key}</strong> · ${label}</div><div class="ov-bar-track"><div class="ov-bar ${cls}" style="width:${width}%"></div></div><div class="ov-bar-value">${fmtNum(value,4)}</div></div>`;
-    }).join('');
+    _overviewForecast=forecast;
+    const accounts=[...new Set(signals.map(s=>s.forecast_key).filter(Boolean))].sort();
+    const accountSelect=document.getElementById('overview-account');
+    const previousAccount=accountSelect.value;
+    accountSelect.innerHTML=accounts.slice(0,20).map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
+    if(accounts.includes(previousAccount)) accountSelect.value=previousAccount;
+    renderOverviewTrace();
 
     const demandSignals=signals.filter(s=>s.impact_channel==='DEMAND'&&s.signal_type!=='NO_SIGNAL'&&s.validation_status==='PASS');
     const recent=[...demandSignals].sort((a,b)=>String(b.authored_at).localeCompare(String(a.authored_at))).slice(0,3);
@@ -801,6 +809,36 @@ async function loadOverview(){
     console.error(e);
     document.getElementById('overview-banner').innerHTML='<div class="ov-message"><div class="ov-alert">!</div><div><div class="ov-title">Overview unavailable</div><div class="ov-copy">The selected run could not be loaded.</div></div></div>';
   }
+}
+
+function renderOverviewTrace(){
+  const account=document.getElementById('overview-account')?.value||'CUST-0001';
+  const seed=[...account].reduce((sum,ch)=>sum+ch.charCodeAt(0),0);
+  const actual=Array.from({length:12},(_,i)=>Math.round(520+75*Math.sin((i+seed%5)/1.7)+i*9+((seed*(i+3))%43)-21));
+  const baseline=actual.map((v,i)=>Math.round(v+(i%3-1)*28+18));
+  const paired=_overviewForecast.uncertainty?.C?.point??0;
+  const multiplier=paired>0 ? 0.72 : 1.12;
+  const augmented=actual.map((v,i)=>Math.round(v+(baseline[i]-v)*multiplier+(i%2?7:-6)));
+  const all=[...actual,...baseline,...augmented];const min=Math.min(...all)-45,max=Math.max(...all)+45;
+  const W=760,H=228,pad={l:46,r:18,t:24,b:34};
+  const x=i=>pad.l+i*(W-pad.l-pad.r)/11;
+  const y=v=>pad.t+(max-v)*(H-pad.t-pad.b)/(max-min);
+  const points=series=>series.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const grid=Array.from({length:5},(_,i)=>{const yy=pad.t+i*(H-pad.t-pad.b)/4;const val=Math.round(max-i*(max-min)/4);return `<line x1="${pad.l}" y1="${yy}" x2="${W-pad.r}" y2="${yy}" stroke="#E2E7E4"/><text x="${pad.l-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#83909C">${val}</text>`}).join('');
+  const cutoffX=x(7);
+  const months=['Jul 20','Jul 27','Aug 3','Aug 10','Aug 17','Aug 24','Aug 31','Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'];
+  const ticks=months.map((m,i)=>i%2===0?`<text x="${x(i)}" y="${H-10}" text-anchor="middle" font-size="9" fill="#83909C">${m}</text>`:'').join('');
+  const circles=actual.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="#17212B"/>`).join('');
+  const arms=[['A','Baseline'],['B','Oracle'],['C','Extracted'],['D','Shuffled']];
+  document.getElementById('overview-chart').className='trace-chart';
+  document.getElementById('overview-chart').innerHTML=`
+    <div class="trace-legend"><span><i class="trace-swatch"></i>Actual demand</span><span><i class="trace-swatch baseline"></i>Tabular forecast</span><span><i class="trace-swatch augmented"></i>Signal-augmented forecast</span></div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Illustrative actual and forecast demand trace for ${esc(account)}">
+      ${grid}<line x1="${cutoffX}" y1="${pad.t-5}" x2="${cutoffX}" y2="${H-pad.b}" stroke="#83909C" stroke-dasharray="4 4"/><text x="${cutoffX+5}" y="${pad.t}" font-size="9" fill="#596674">Forecast cutoff</text>
+      <polyline points="${points(baseline)}" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-dasharray="7 5"/><polyline points="${points(augmented)}" fill="none" stroke="#047857" stroke-width="2.5"/><polyline points="${points(actual)}" fill="none" stroke="#17212B" stroke-width="2.5"/>${circles}${ticks}
+    </svg>
+    <div class="trace-note">Illustrative synthetic trace for presentation. Measured MASE values and paired lift are shown above and in Forecast Explorer.</div>
+    <div class="trace-arm-summary">${arms.map(([key,label])=>`<div class="trace-arm">Arm ${key} · ${label}<strong>${fmtNum(_overviewForecast[key]?.mase,4)} MASE</strong></div>`).join('')}</div>`;
 }
 
 function openSignalPanel(signalId){
