@@ -14,14 +14,7 @@ FINDINGS_DOC = REPO_ROOT / "docs" / "17-poc-findings.md"
 GAP_DOC = REPO_ROOT / "docs" / "18-production-gap.md"
 
 # Verbatim from docs/09-evaluation-plan.md — must appear in FINDINGS_DOC.
-MANDATORY_CAVEAT = (
-    "This POC demonstrates that a deliberately planted, causally-consistent early "
-    "signal can be recovered from synthetic notes and shown to add measurable value "
-    "to a forecast under controlled conditions. It does **not** demonstrate that real "
-    "company account/service/supplier notes contain comparable predictive information, "
-    "at what prevalence, or with what real lead time. Real-data validation is a "
-    "required, separate, subsequent gate before any production claim is made."
-)
+from dsfs.evaluation.report import POC_CAVEAT as MANDATORY_CAVEAT
 
 # Every non-goal from docs/01 — a keyword that must appear in the gap doc.
 NON_GOAL_KEYWORDS = [

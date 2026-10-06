@@ -453,8 +453,11 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": "d2-0.1.0",
-      "default": "d2-0.1.0",
+      "default": "d2-0.2.0",
+      "enum": [
+        "d2-0.1.0",
+        "d2-0.2.0"
+      ],
       "title": "Schema Version",
       "type": "string"
     },
@@ -480,6 +483,16 @@
       "minItems": 1,
       "title": "Cases",
       "type": "array"
+    },
+    "scenario_context": {
+      "additionalProperties": {
+        "items": {
+          "$ref": "#/$defs/SourceEvidence"
+        },
+        "type": "array"
+      },
+      "title": "Scenario Context",
+      "type": "object"
     }
   },
   "required": [

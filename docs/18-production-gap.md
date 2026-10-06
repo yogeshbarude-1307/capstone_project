@@ -1,3 +1,5 @@
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 18 — Production Gap Assessment
 
 Written 2026-09-27, extending `01-poc-scope-and-non-goals.md` with what

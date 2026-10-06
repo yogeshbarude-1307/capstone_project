@@ -1,3 +1,5 @@
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 04 — API / Data Contracts
 
 ## Wire contracts (`CONFIRMED` approach, `PROPOSED` field lists)
@@ -51,19 +53,26 @@ def get_historical_features(
     whose contributing signal has available_at > cutoff."""
 ```
 
-## Optional localhost HTTP wrapper (`PROPOSED`, build only if useful for the demo)
+## Required localhost HTTP contract
 
-If a thin HTTP layer is added (e.g. FastAPI bound to `127.0.0.1` only, never `0.0.0.0`), it should expose:
+The demand-v1 / schema 1.0.0 contract replaces the old whole-horizon feature semantics.
+Signal schema 0.2.0 adds business-event references; readers retain compatibility with 0.1.0.
+Annotation schema d2-0.2.0 adds unscored preceding lifecycle context.
 
-| Endpoint | Purpose |
-|---|---|
-| `POST /v1/features:batchGet` | Latest eligible features for entity keys — wraps `get_features`. |
-| `POST /v1/historical-features:retrieve` | Point-in-time features for entity/cutoff pairs — wraps `get_historical_features`. |
-| `GET /v1/feature-sets/{version}` | Schema/feature names/types for a given `feature_definition_version`. |
-| `GET /v1/lineage/{signal_id_or_feature_row_id}` | Resolves the full provenance chain back to source evidence. |
-| `GET /health/live` | Process liveness only. |
+- `POST /v1/features:batchGet`: `run_id`, `feature_set_version`, `entity_keys`,
+  `forecast_cutoff`, `horizons` (1 through 4).
+- `POST /v1/historical-features:retrieve`: the same run/version/horizons with
+  `pairs: [{entity_key, forecast_cutoff}]`.
+- `GET /v1/feature-sets/demand-v1`: canonical wire schema.
+- `GET /v1/lineage/{run_id}/{signal_id}`: source revision, raw evidence and span.
 
-This wrapper is explicitly optional (`OPEN` — see `14-open-questions.md`); the callable Python API above already satisfies every functional requirement of the POC and avoids the complexity of running/testing a network service inside an offline capstone environment.
+Generic responses contain `features`, combined tabular/signal values, target-week
+boundaries, contributing IDs and simulated publication/freshness metadata, without
+raw text. Cutoffs must be explicit Monday midnight UTC boundaries. Unknown runs,
+accounts or versions return 404, invalid requests 422, and unavailable snapshots
+503. The HTTP provider validates identity/version and exact requested keys. Failure
+stops forecasting; there is no file fallback. In-process retrieval remains for tests.
+Only completed snapshots are served by the dashboard's service.
 
 ## What is never exposed
 

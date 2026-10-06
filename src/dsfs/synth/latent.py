@@ -68,6 +68,7 @@ class Knowable:
     knowable_from: datetime
     effective_start: datetime
     effective_end: datetime
+    cancellation_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -84,6 +85,7 @@ class HiddenState:
     true_demand_delta_frac: float  # signed: positive=more demand, negative=less
     effective_start: datetime
     effective_end: datetime
+    cancellation_at: datetime | None = None
 
 
 def _pick_time_expression_window(
@@ -167,6 +169,16 @@ def generate_latent_events(
             knowable_from, effective_start, effective_end = _pick_time_expression_window(
                 config, period_start, rng
             )
+            # Independent lifecycle stream: text mutations never change outcomes.
+            lifecycle_rng = random.Random(f"{config.seed}:{event_id}:lifecycle")
+            reversal_probability = config.reversal_probability
+            if config.drift_scenario == "contradiction_rate_increase" and (
+                (effective_start.date()-config.start_date).days // 7 >= config.drift_inject_at_week
+            ):
+                reversal_probability = min(1.0, reversal_probability * 3)
+            last_cancel_day = min(21, max(1, (effective_end-effective_start).days-1))
+            cancellation_at = (effective_start + timedelta(days=lifecycle_rng.randint(1, last_cancel_day))
+                               if lifecycle_rng.random() < reversal_probability else None)
 
             knowables.append(
                 Knowable(
@@ -183,6 +195,7 @@ def generate_latent_events(
                     knowable_from=knowable_from,
                     effective_start=effective_start,
                     effective_end=effective_end,
+                    cancellation_at=cancellation_at,
                 )
             )
             hidden_states.append(
@@ -193,6 +206,7 @@ def generate_latent_events(
                     true_demand_delta_frac=true_delta if impact_channel == ImpactChannel.DEMAND else 0.0,
                     effective_start=effective_start,
                     effective_end=effective_end,
+                    cancellation_at=cancellation_at,
                 )
             )
 

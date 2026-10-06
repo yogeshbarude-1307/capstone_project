@@ -19,6 +19,7 @@ from dsfs.config import Settings, get_settings
 from dsfs.contracts import ContractValidationError, validate_record
 from dsfs.features.access import load_feature_store
 from dsfs.features.transformer import DEFAULT_FEATURE_DEFINITION_VERSION
+from dsfs.models.demand_feature import FEATURE_VERSION
 from dsfs.synth.config import GeneratorConfig
 from dsfs.synth.entities import generate_entities
 
@@ -29,7 +30,9 @@ def build_d3(
     settings: Settings,
     *,
     extraction_run_id: str,
-    feature_definition_version: str = DEFAULT_FEATURE_DEFINITION_VERSION,
+    feature_definition_version: str = FEATURE_VERSION,
+    horizons: tuple[int, ...] = (1,2,3,4),
+    forecast_config=None,
 ) -> tuple[Path, int, int]:
     """Build the D3 feature dataset and write it as Parquet.
 
@@ -61,13 +64,21 @@ def build_d3(
     )
 
     pairs = [(ek, c) for c in cutoffs for ek in entities]
-    df = store.get_historical_features(pairs, feature_set_version=feature_definition_version)
+    if feature_definition_version == FEATURE_VERSION:
+        from dsfs.features.service import DemandFeatureService
+        delays_path = settings.data_processed_dir / "publication_delays.json"
+        delays = json.loads(delays_path.read_text()) if delays_path.exists() else {}
+        service = DemandFeatureService(d0, store._signals, store._sources, extraction_run_id,
+                                       delays=delays, forecast_config=forecast_config)
+        df = service.historical(pairs, horizons)
+    else:
+        df = store.get_historical_features(pairs, feature_set_version=feature_definition_version)
 
     schema_failures = 0
     for idx, row in df.iterrows():
         record: dict = {}
         for k, v in row.to_dict().items():
-            if isinstance(v, list):
+            if isinstance(v, (list,dict)):
                 record[k] = v
             elif pd.isna(v):
                 record[k] = None
@@ -75,7 +86,7 @@ def build_d3(
                 record[k] = v
         record["contributing_signal_ids"] = list(record.get("contributing_signal_ids") or [])
         try:
-            validate_record("forecast_feature", record)
+            validate_record("demand_feature" if feature_definition_version == FEATURE_VERSION else "forecast_feature", record)
         except ContractValidationError as exc:
             schema_failures += 1
             logger.warning(
@@ -95,7 +106,7 @@ def main(settings: Settings | None = None) -> None:
     parser.add_argument("--run-id", required=True, help="Extraction run ID to build features from")
     parser.add_argument(
         "--fdv",
-        default=DEFAULT_FEATURE_DEFINITION_VERSION,
+        default=FEATURE_VERSION,
         help="Feature definition version",
     )
     args = parser.parse_args()

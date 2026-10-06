@@ -57,18 +57,30 @@ def _settings() -> Settings:
     return get_settings()
 
 
-def _manifest() -> dict:
-    path = REPO_ROOT / "reports" / "manifest.json"
+def _manifest(run_id: str | None = None) -> dict:
+    from dsfs.runs import run_settings
+    path = (run_settings(_settings(), run_id).reports_dir if run_id else _settings().reports_dir) / "manifest.json"
     if not path.exists():
+        if run_id: raise HTTPException(404,"Unknown completed run")
         return {}
     raw = path.read_text(encoding="utf-8")
     # json.loads rejects NaN — replace bare NaN with null first
     raw = re.sub(r"\bNaN\b", "null", raw)
-    return json.loads(raw)
+    data = json.loads(raw)
+    if data.get("status") != "complete":
+        if run_id: raise HTTPException(404,"Run is not complete")
+        return {}
+    return data
+
+def _snapshot(run_id=None):
+    from dsfs.runs import run_settings
+    manifest = _manifest(run_id)
+    return run_settings(_settings(), manifest["run_id"]) if manifest.get("run_id") else _settings()
 
 
-def _load_signals() -> list[dict]:
-    s = _settings()
+def _load_signals(run_id=None) -> list[dict]:
+    if not _manifest(run_id): return []
+    s = _snapshot(run_id)
     ledger = s.data_processed_dir / "signal_ledger.jsonl"
     notes_path = s.data_raw_dir / "d1_notes.jsonl"
     if not ledger.exists():
@@ -86,12 +98,15 @@ def _load_signals() -> list[dict]:
 
     # Merge signals with notes
     rows = []
+    selected = _manifest(run_id).get("run_id")
     with ledger.open(encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             sig = json.loads(line)
+            if selected and sig.get("extraction_run_id") != selected:
+                continue
             note = notes.get(sig.get("source_id"), {})
             rows.append({**sig,
                          "raw_text": note.get("raw_text", ""),
@@ -101,9 +116,10 @@ def _load_signals() -> list[dict]:
     return rows
 
 
-def _load_extraction_report() -> dict:
+def _load_extraction_report(run_id=None) -> dict:
     """Load the most recent extraction eval report.json."""
-    eval_dir = REPO_ROOT / "reports" / "extraction"
+    if not _manifest(run_id): return {}
+    eval_dir = _snapshot(run_id).reports_dir / "extraction"
     if not eval_dir.exists():
         return {}
     candidates = sorted(eval_dir.glob("*/report.json"), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -112,8 +128,28 @@ def _load_extraction_report() -> dict:
     return json.loads(candidates[0].read_text(encoding="utf-8"))
 
 
-def _load_lineage(entity_key: str, cutoff_str: str) -> dict:
-    s = _settings()
+def _independent_review(manifest):
+    """Separate reviewer evidence from the immutable synthetic run bundle."""
+    metadata = manifest.get("steps", {}).get("independent_review", {})
+    if not metadata: return {"status": "not_prepared"}
+    root = _settings().reports_dir / "independent-reviews" / manifest["run_id"]
+    for path in sorted(root.glob("*/report.json"), reverse=True):
+        report = json.loads(path.read_text(encoding="utf-8"))
+        snapshot = json.loads(path.with_name("dataset_snapshot.json").read_text(encoding="utf-8"))
+        original = json.loads(Path(metadata["path"]).read_text(encoding="utf-8"))
+        ids = lambda d: {c["evidence"]["source_id"]: c["evidence"] for c in d["cases"]}
+        if ids(snapshot) != ids(original): continue
+        if report.get("provisional") or report.get("annotation_status") != {"human_single": 50}: continue
+        if report.get("extractor_version") != metadata["extractor_version"]: continue
+        if len(report.get("reviewer_ids",[])) != 1: continue
+        if report.get("code_sha256") != metadata.get("code_sha256"): continue
+        return {"status": "reviewed", "provenance": "independent single-person review (declared)",
+                "views": report["views"], "report_path": str(path)}
+    return metadata
+
+
+def _load_lineage(entity_key: str, cutoff_str: str, run_id=None) -> dict:
+    s = _snapshot(run_id)
     ledger = s.data_processed_dir / "signal_ledger.jsonl"
     notes_path = s.data_raw_dir / "d1_notes.jsonl"
     d3_path = s.data_processed_dir / "d3_features.parquet"
@@ -136,14 +172,11 @@ def _load_lineage(entity_key: str, cutoff_str: str) -> dict:
         from dsfs.lineage import load_lineage_inputs
         from dsfs.features.access import load_feature_store
 
-        cutoff = datetime.fromisoformat(cutoff_str).replace(tzinfo=timezone.utc)
-        store = load_feature_store(ledger, notes_path, extraction_run_id=run_id)
-        response = store.get_features([entity_key], cutoff)
-
-        if not response.features:
-            return {"message": f"No features for {entity_key} at {cutoff_str}"}
-
-        feat = response.features[0]
+        cutoff = datetime.fromisoformat(cutoff_str)
+        if cutoff.tzinfo is None: cutoff = cutoff.replace(tzinfo=timezone.utc)
+        from dsfs.runs import load_run_service
+        service = load_run_service(_settings(), run_id)
+        feat = service.row(entity_key, cutoff)
         signal_ids = feat.contributing_signal_ids or []
         if not signal_ids:
             return {"entity_key": entity_key, "forecast_cutoff": cutoff_str,
@@ -194,8 +227,8 @@ def index():
 
 
 @app.get("/api/status")
-def api_status():
-    manifest = _manifest()
+def api_status(run_id: str | None = None):
+    manifest = _manifest(run_id)
     if not manifest:
         return _json({"ready": False, "message": "No pipeline run found. Click 'Run Pipeline'."})
     steps = manifest.get("steps", {})
@@ -211,17 +244,18 @@ def api_status():
         "n_weeks": synth.get("n_weeks", 0),
         "accepted": ext.get("accepted", 0),
         "quarantined": ext.get("quarantined", 0),
+        "freshness": steps.get("freshness", {}),
     })
 
 
 @app.get("/api/signals")
-def api_signals():
-    return _json(_load_signals())
+def api_signals(run_id: str | None = None):
+    return _json(_load_signals(run_id))
 
 
 @app.get("/api/signals/{signal_id}")
-def api_signal_detail(signal_id: str):
-    rows = _load_signals()
+def api_signal_detail(signal_id: str, run_id: str | None = None):
+    rows = _load_signals(run_id)
     for row in rows:
         if row.get("signal_id") == signal_id:
             return _json(row)
@@ -229,19 +263,21 @@ def api_signal_detail(signal_id: str):
 
 
 @app.get("/api/forecast")
-def api_forecast():
-    manifest = _manifest()
+def api_forecast(run_id: str | None = None):
+    manifest = _manifest(run_id)
     if not manifest:
         return _json({"error": "No pipeline run found."})
-    return _json(manifest.get("steps", {}).get("forecast", {}))
+    steps = manifest.get("steps", {})
+    return _json({**steps.get("forecast", {}), "uncertainty": steps.get("forecast_uncertainty", {}),
+                  "segments": steps.get("forecast_segments", {})})
 
 
 @app.get("/api/extraction")
-def api_extraction():
-    report = _load_extraction_report()
+def api_extraction(run_id: str | None = None):
+    report = _load_extraction_report(run_id)
     if not report:
         return _json({"error": "No extraction evaluation report found."})
-    manifest = _manifest()
+    manifest = _manifest(run_id)
     ext = manifest.get("steps", {}).get("extraction", {}) if manifest else {}
 
     # Flatten views[0].metrics for easy consumption
@@ -259,33 +295,41 @@ def api_extraction():
         "metrics": metrics,
         "limitations": report.get("limitations", []),
         "mandatory_caveat": report.get("mandatory_final_poc_caveat", ""),
+        "independent_review": _independent_review(manifest),
     })
 
 
 @app.get("/api/drift")
-def api_drift():
-    manifest = _manifest()
+def api_drift(run_id: str | None = None):
+    manifest = _manifest(run_id)
     if not manifest:
         return _json({"error": "No pipeline run found."})
     return _json(manifest.get("steps", {}).get("drift", {}))
 
 
 @app.get("/api/lineage")
-def api_lineage(entity: str = "", cutoff: str = "2024-06-01T00:00:00"):
+def api_lineage(entity: str = "", cutoff: str = "2024-06-03T00:00:00Z", run_id: str | None = None):
     if not entity:
-        s = _settings()
-        notes_path = s.data_raw_dir / "d1_notes.jsonl"
-        entities: set[str] = set()
-        if notes_path.exists():
-            with notes_path.open(encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        obj = json.loads(line)
-                        for e in obj.get("entity_mentions_raw", []):
-                            entities.add(e)
-        return _json({"entities": sorted(entities)})
-    return _json(_load_lineage(entity, cutoff))
+        s = _snapshot(run_id)
+        path = s.data_raw_dir / "d0_tabular_demand.parquet"
+        if not path.exists(): return _json({"entities": [], "cutoffs": []})
+        import pandas as pd
+        d0 = pd.read_parquet(path)
+        return _json({"entities": sorted(d0.entity_key.unique()), "cutoffs": [
+            pd.Timestamp(d).tz_localize("UTC").isoformat() for d in sorted(d0.period_start.unique())]})
+    return _json(_load_lineage(entity, cutoff, run_id))
+
+@app.get("/api/runs")
+def api_runs():
+    from dsfs.runs import completed_runs
+    return _json([{"run_id":m["run_id"],"finished_at":m["finished_at"]} for m in completed_runs(_settings())])
+
+def _resolve_feature_service(run_id):
+    from dsfs.runs import load_run_service
+    return load_run_service(_settings(), run_id)
+
+from dsfs.features.http import feature_router
+app.include_router(feature_router(_resolve_feature_service))
 
 
 @app.post("/api/pipeline/run")
@@ -296,11 +340,10 @@ def api_run_pipeline():
     run_config = load_run_config(config_path if config_path.exists() else None)
     try:
         manifest = run_e2e(settings, run_config)
-        manifest_path = settings.reports_dir / "manifest.json"
-        manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text(json.dumps(manifest, indent=2, default=str), encoding="utf-8")
-        return _json({"ok": True, "steps": list(manifest.get("steps", {}).keys())})
+        return _json({"ok": True, "run_id":manifest["run_id"], "steps": list(manifest.get("steps", {}).keys())})
     except Exception as exc:
+        if "concurrent runs" in str(exc):
+            raise HTTPException(409, str(exc)) from exc
         return _json({"ok": False, "error": str(exc)})
 
 

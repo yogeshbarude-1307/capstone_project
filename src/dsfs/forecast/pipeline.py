@@ -17,7 +17,7 @@ import pandas as pd
 from dsfs.config import Settings, get_settings
 from dsfs.evaluation.ablation import ABLATIONS, NOT_IMPLEMENTED, run_ablation_matrix
 from dsfs.evaluation.segments import per_horizon, signal_exposed_subset
-from dsfs.evaluation.statistics import bootstrap_lift_ci
+from dsfs.evaluation.paired import trajectory_lift_ci
 from dsfs.features.access import load_feature_store
 from dsfs.forecast.harness import (
     DEFAULT_HORIZON_WEEKS,
@@ -28,6 +28,7 @@ from dsfs.forecast.harness import (
     compute_mae,
     evaluate_arm,
     run_arm,
+    paired_origins,
 )
 from dsfs.forecast.oracle import build_oracle_features
 from dsfs.forecast.shuffle import shuffle_features
@@ -35,9 +36,9 @@ from dsfs.synth.config import GeneratorConfig
 from dsfs.synth.entities import generate_entities
 
 POC_CAVEAT = (
-    "This POC demonstrates that a deliberately planted, causally-consistent early "
-    "signal can be recovered from synthetic notes and shown to add measurable value "
-    "to a forecast under controlled conditions. It does **not** demonstrate that "
+    "This synthetic POC evaluates whether early qualitative signals improve forecasts. "
+    "Positive forecast value is established only when the reported comparison supports it. "
+    "It does **not** demonstrate that "
     "real company account/service/supplier notes contain comparable predictive "
     "information, at what prevalence, or with what real lead time. Real-data "
     "validation is a required, separate, subsequent gate before any production "
@@ -75,6 +76,7 @@ class ExperimentData:
     arm_results: dict[str, ArmResult]
     oracle_features: pd.DataFrame
     extracted_features: pd.DataFrame
+    http_request_count: int = 0
 
 
 def run_experiment(
@@ -94,24 +96,37 @@ def run_experiment(
 
     gt_path = settings.data_raw_dir / "d1_note_ground_truth.jsonl"
     notes_path = settings.data_raw_dir / "d1_notes.jsonl"
-    oracle_features = build_oracle_features(
-        gt_path, notes_path, cutoffs, entities,
-    )
+    from dsfs.models.source_evidence import SourceEvidence
+    from dsfs.models.signal_record import SignalRecord
+    from dsfs.synth.notes import NoteGroundTruth
+    from dsfs.extraction.ledger import read_ledger
+    from dsfs.forecast.oracle_service import oracle_service
+    from dsfs.features.service import DemandFeatureService
+    sources = {s.source_id:s for s in [SourceEvidence.model_validate_json(line) for line in notes_path.read_text(encoding="utf-8").splitlines() if line]}
+    truth = [NoteGroundTruth.model_validate_json(line) for line in gt_path.read_text(encoding="utf-8").splitlines() if line]
+    signals = [SignalRecord.model_validate(r) for r in read_ledger(settings.data_processed_dir / "signal_ledger.jsonl")
+               if r["extraction_run_id"] == extraction_run_id]
+    delays_path = settings.data_processed_dir / "publication_delays.json"
+    delays = json.loads(delays_path.read_text()) if delays_path.exists() else {}
+    pairs = [(e,c) for c in cutoffs for e in entities]
+    oracle_features = oracle_service(d0, truth, sources, extraction_run_id, delays=delays, forecast_config=config).historical(pairs, range(1,config.horizon_weeks+1))
     arm_b = run_arm(d0, config, "B", signal_features=oracle_features)
 
-    store = load_feature_store(
-        settings.data_processed_dir / "signal_ledger.jsonl",
-        notes_path,
-        extraction_run_id=extraction_run_id,
-    )
-    entity_cutoff_pairs = [(e, c) for c in cutoffs for e in entities]
-    extracted_features = store.get_historical_features(entity_cutoff_pairs)
+    service = DemandFeatureService(d0, signals, sources, extraction_run_id, delays=delays, forecast_config=config)
+    from dsfs.features.providers import serve_local
+    with serve_local(service) as provider:
+        extracted_features = provider.retrieve(pairs, range(1, config.horizon_weeks+1))
+        http_request_count = provider.request_count
     arm_c = run_arm(d0, config, "C", signal_features=extracted_features)
 
-    shuffled_features = shuffle_features(extracted_features)
-    arm_d = run_arm(d0, config, "D", signal_features=shuffled_features)
-
-    arm_results = {"A": arm_a, "B": arm_b, "C": arm_c, "D": arm_d}
+    arm_results = {"A": arm_a, "B": arm_b, "C": arm_c}
+    if len(entities) > 1:
+        shuffled_features = shuffle_features(extracted_features)
+        # Tabular history stays attached to the correct account in the control.
+        shuffled_features = shuffled_features.drop(columns=["tabular_features"])
+        arm_results["D"] = run_arm(d0, config, "D", signal_features=shuffled_features)
+    for result in arm_results.values():
+        paired_origins(arm_a, result)
     metrics = {
         label: evaluate_arm(result, baseline_mae=metrics_a.mae)
         for label, result in arm_results.items()
@@ -120,6 +135,7 @@ def run_experiment(
     return ExperimentData(
         d0=d0, config=config, metrics=metrics, arm_results=arm_results,
         oracle_features=oracle_features, extracted_features=extracted_features,
+        http_request_count=http_request_count,
     )
 
 
@@ -136,7 +152,7 @@ def _format_report(results: dict[str, ExperimentMetrics], config: ForecastConfig
         "",
         "## Results",
         "",
-        "| Arm | Description | MASE | MAE | Bias | Origins | Lift vs A |",
+        "| Arm | Description | MASE | MAE | Bias | Origins | MAE lift vs A |",
         "|-----|-------------|------|-----|------|---------|-----------|",
     ]
 
@@ -148,6 +164,9 @@ def _format_report(results: dict[str, ExperimentMetrics], config: ForecastConfig
     }
 
     for arm_label in ["A", "B", "C", "D"]:
+        if arm_label not in results:
+            lines.append(f"| {arm_label} | Unavailable (single account) | — | — | — | 0 | — |")
+            continue
         m = results[arm_label]
         lift = f"{m.incremental_lift_vs_a:+.4f}" if m.incremental_lift_vs_a is not None else "—"
         lines.append(
@@ -165,36 +184,21 @@ def _format_report(results: dict[str, ExperimentMetrics], config: ForecastConfig
     a_mae = results["A"].mae
     b_mae = results["B"].mae
     c_mae = results["C"].mae
-    d_mae = results["D"].mae
+    d_mae = results["D"].mae if "D" in results else a_mae
 
     b_lift = (a_mae - b_mae) / a_mae if a_mae > 0 else 0
     c_lift = (a_mae - c_mae) / a_mae if a_mae > 0 else 0
     d_lift = (a_mae - d_mae) / a_mae if a_mae > 0 else 0
 
-    if d_lift > 0.02:
-        lines.append(
-            "**LEAKAGE WARNING:** Arm D (shuffled control) shows meaningful lift "
-            f"({d_lift:+.2%}); the B/C findings below must be re-checked for a PIT "
-            "or entity-alignment bug before being trusted."
-        )
-        lines.append("")
-
-    if b_lift < 0.01:
-        lines.append(
-            "**B ~ A:** the planted signal itself carries no forecastable information "
-            "at the current feature representation. Rethink hypothesis or feature design."
-        )
-    elif c_lift < 0.005:
-        lines.append(
-            "**B > A but C ~ A:** oracle signal is useful but the extraction/representation "
-            "pipeline is the bottleneck. Iterate on docs/07."
-        )
+    lines.append("Point estimates alone do not establish forecast value. The run manifest reports paired MASE lift and 95% account-trajectory confidence intervals; the frozen multi-seed study determines the oracle gate.")
+    if b_lift <= 0:
+        lines.append("Oracle MAE does not improve on baseline in this run. Revisit representation before expanding extraction technology.")
+    elif c_lift <= 0:
+        lines.append("Oracle MAE improves, but extracted MAE does not. Check interpretation and representation after the frozen oracle gate.")
     else:
-        frac = c_lift / b_lift if b_lift > 0 else 0
-        lines.append(
-            f"**C retains {frac:.1%} of oracle lift.** End-to-end mechanics work; "
-            "the extractor recovers most of the usable planted signal."
-        )
+        lines.append("Both oracle and extracted MAE improve in this run; assess their paired uncertainty before drawing conclusions.")
+    if d_lift > 0:
+        lines.append("The shuffled control also improves on baseline. This can reflect common signal structure or chance; inspect its paired uncertainty and temporal regression checks.")
 
     lines.extend([
         "",
@@ -217,9 +221,9 @@ def _format_ablation_report(data: ExperimentData) -> str:
         "# Forecast Ablation Matrix (Milestone 9)",
         "",
         "Each row keeps only the listed feature columns; every other signal "
-        "column is nulled before merging, so the model sees strictly less "
+        "column is removed before merging, so the model sees strictly less "
         "information as you go up the table. Lift and its 95% CI are computed "
-        "via paired bootstrap against arm A's per-origin absolute errors.",
+        "by resampling complete paired account trajectories against arm A (MAE).",
         "",
     ]
 
@@ -227,6 +231,7 @@ def _format_ablation_report(data: ExperimentData) -> str:
         signal_features = data.oracle_features if arm_label == "B" else data.extracted_features
         results = run_ablation_matrix(
             data.d0, data.config, signal_features, arm_label=arm_label, baseline_result=data.arm_results["A"],
+            full_result=data.arm_results[arm_label],
         )
         # The "full" ablation applies no masking, so it is identical by
         # construction to the already-computed top-level arm result — reuse
@@ -245,8 +250,8 @@ def _format_ablation_report(data: ExperimentData) -> str:
                 continue
             errors = np.abs(arm_result.actuals - arm_result.predictions)
             mae = float(errors.mean())
-            n = min(len(a_errors), len(errors))
-            point, lo, hi = bootstrap_lift_ci(a_errors[:n], errors[:n], seed=data.config.random_state)
+            uncertainty = trajectory_lift_ci(data.arm_results["A"], arm_result, metric="mae", seed=data.config.random_state)
+            point, lo, hi = (uncertainty[k] for k in ("point", "ci_low", "ci_high"))
             lines.append(
                 f"| {name} | {mae:.2f} | {point:+.2%} | [{lo:+.2%}, {hi:+.2%}] | {len(arm_result.origins)} |"
             )

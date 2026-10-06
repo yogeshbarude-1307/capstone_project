@@ -7,13 +7,14 @@ readme = "README.md"
 dependencies = [
     "pydantic>=2.10",
     "pydantic-settings>=2.6",
-    "jsonschema>=4.23",
+    "jsonschema[format]>=4.23",
     "pandas>=2.2",
     "pyarrow>=17",
+    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3", "numpy>=1.26"]
+dev = ["pytest>=8.3", "httpx>=0.27"]
 ner = ["spacy>=3.7"]
 ui = ["gradio>=4.44"]
 server = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
@@ -32,6 +33,7 @@ dsfs-drift-report = "dsfs.drift.report:main"
 dsfs-run = "dsfs.orchestrate:main"
 dsfs-app = "dsfs.app:main"
 dsfs-server = "dsfs.server:main"
+dsfs-study = "dsfs.study:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

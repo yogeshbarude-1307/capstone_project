@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.poc/schemas/demand_feature.schema.json",
+  "title": "DemandFeatureRecord",
+  "description": "Combined customer-demand features keyed by run, account, cutoff and target week; simulated publication clock.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "entity_key",
+    "forecast_cutoff",
+    "feature_definition_version",
+    "generated_at",
+    "contributing_signal_ids",
+    "schema_version",
+    "run_id",
+    "horizon_step",
+    "target_start",
+    "target_end",
+    "tabular_features",
+    "freshness_target_minutes",
+    "freshness_breach",
+    "active_demand_signal_count",
+    "target_demand_direction"
+  ],
+  "properties": {
+    "entity_key": {
+      "type": "string",
+      "description": "Forecast grain key (e.g. customer-SKU); exact grain is OPEN, see 14-open-questions.md."
+    },
+    "forecast_cutoff": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The point-in-time cutoff this row is valid for. No contributing signal may have available_at > this value."
+    },
+    "feature_definition_version": {
+      "const": "demand-v1",
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "contributing_signal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "has_active_signal_30d": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "signal_count_30d": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "net_demand_direction_30d": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "INCREASE",
+        "DECREASE",
+        "STABLE",
+        "MIXED",
+        "UNKNOWN",
+        null
+      ]
+    },
+    "expected_qty_delta_next_horizon": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "committed_qty": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "cancelled_qty_30d": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "delay_count_90d": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "nearest_effective_start_days": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "days_since_latest_signal": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "independent_source_count_30d": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "active_conflict_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "feature_available_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "staleness_status": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "FRESH",
+        "STALE",
+        "UNKNOWN",
+        null
+      ]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "horizon_step": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4
+    },
+    "target_start": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target_end": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "signed_pct_change": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "tabular_features": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "publication_latency_minutes": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "freshness_target_minutes": {
+      "const": 60,
+      "type": "integer"
+    },
+    "freshness_breach": {
+      "type": "boolean"
+    },
+    "supply_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "conditional_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "asserted_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expected_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "likely_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "possible_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rejected_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "active_demand_signal_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target_demand_direction": {
+      "type": "string",
+      "enum": [
+        "INCREASE",
+        "DECREASE",
+        "MIXED",
+        "STABLE",
+        "UNKNOWN"
+      ]
+    }
+  }
+}

@@ -1,3 +1,5 @@
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 09 — Evaluation Plan
 
 ## Two independent experiments, never merged (`CONFIRMED`)
@@ -50,4 +52,4 @@ Every reported result must be regenerable from: the pinned `schema_version`, `ex
 
 ## The mandatory reporting caveat (`CONFIRMED`, must appear verbatim in the final POC report)
 
-> This POC demonstrates that a deliberately planted, causally-consistent early signal can be recovered from synthetic notes and shown to add measurable value to a forecast under controlled conditions. It does **not** demonstrate that real company account/service/supplier notes contain comparable predictive information, at what prevalence, or with what real lead time. Real-data validation is a required, separate, subsequent gate before any production claim is made.
+> This synthetic POC evaluates whether early qualitative signals improve forecasts. Positive forecast value is established only when the reported comparison supports it. It does **not** demonstrate that real company account/service/supplier notes contain comparable predictive information, at what prevalence, or with what real lead time. Real-data validation is a required, separate, subsequent gate before any production claim is made.

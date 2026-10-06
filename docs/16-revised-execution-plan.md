@@ -1,3 +1,5 @@
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 16 — Revised Execution Plan (Track A fixes + M9–M12)
 
 Written 2026-09-27. Supersedes the "next batch" note in [12-implementation-milestones.md](12-implementation-milestones.md) and organizes M9–M12 around the business gates from the Phase One research report rather than around milestone numbers alone.

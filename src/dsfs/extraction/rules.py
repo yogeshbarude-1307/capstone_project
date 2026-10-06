@@ -131,6 +131,13 @@ def detect_time_window(
     text: str, authored_at: datetime
 ) -> tuple[datetime | None, datetime | None, str | None, str | None]:
     lower = text.lower()
+    explicit = re.search(r"effective from (\d{4}-\d{2}-\d{2}) until (\d{4}-\d{2}-\d{2})", lower)
+    if explicit:
+        try:
+            start, end = (datetime.fromisoformat(v).replace(tzinfo=authored_at.tzinfo) for v in explicit.groups())
+            return start, end, explicit.group(0), "interval"
+        except ValueError:
+            return None, None, None, None
     # Calendar intervals are half-open [start, end), preserving the source timezone.
     if "next month" in lower:
         return _month_start(authored_at, 1), _month_start(authored_at, 2), "next month", "month"

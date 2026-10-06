@@ -61,7 +61,7 @@ def test_e2e_smoke_schema_failure_aborts_run(smoke_settings: Settings, monkeypat
     """The orchestrator must not silently continue past a broken D3 build."""
     import dsfs.orchestrate as orch
 
-    def _fake_build_d3(settings, *, extraction_run_id):
+    def _fake_build_d3(settings, *, extraction_run_id, **kwargs):
         return smoke_settings.data_processed_dir / "d3_features.parquet", 10, 1
 
     monkeypatch.setattr(orch, "build_d3", _fake_build_d3)

@@ -48,11 +48,13 @@ def _ridge_fit(
     """
     X_mean = X.mean(axis=0)
     y_mean = y.mean()
-    Xc = X - X_mean
+    scale = X.std(axis=0)
+    scale[scale == 0] = 1.0
+    Xc = (X - X_mean) / scale
     yc = y - y_mean
     n_features = X.shape[1]
     A = Xc.T @ Xc + alpha * np.eye(n_features)
-    coefs = np.linalg.solve(A, Xc.T @ yc)
+    coefs = np.linalg.solve(A, Xc.T @ yc) / scale
     intercept = y_mean - X_mean @ coefs
     return coefs, intercept
 
@@ -73,6 +75,7 @@ class ForecastConfig:
     random_state: int = 42
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "lag_weeks", tuple(self.lag_weeks))
         if not self.lag_weeks:
             raise ValueError("lag_weeks must not be empty")
         if any(l <= 0 for l in self.lag_weeks):
@@ -85,6 +88,8 @@ class ForecastConfig:
             raise ValueError(f"horizon_weeks must be positive; got {self.horizon_weeks}")
         if self.train_weeks <= 0:
             raise ValueError(f"train_weeks must be positive; got {self.train_weeks}")
+        if not np.isfinite(self.ridge_alpha) or self.ridge_alpha <= 0:
+            raise ValueError("ridge_alpha must be finite and positive")
 
 
 @dataclass
@@ -97,6 +102,8 @@ class OriginResult:
     predicted: float
     arm: ArmLabel
     origin_cutoff: object = None  # the forecast_cutoff used to key signal_features (docs/16 M9 segments)
+    horizon_step: int = 1
+    mase_scale: float | None = None
 
 
 @dataclass
@@ -211,6 +218,13 @@ def run_arm(
     entities = sorted(d0["entity_key"].unique())
 
     signal_features = normalize_cutoff_column(signal_features)
+    signal_index = {}
+    if signal_features is not None and not signal_features.empty:
+        for row in signal_features.to_dict("records"):
+            key = (row["entity_key"], pd.Timestamp(row["forecast_cutoff"]), int(row.get("horizon_step", 0)))
+            if key in signal_index:
+                raise ValueError(f"Duplicate signal feature key: {key}")
+            signal_index[key] = row
 
     for entity_key in entities:
         entity_data = d0[d0["entity_key"] == entity_key].sort_values("week_index")
@@ -221,49 +235,56 @@ def run_arm(
 
         demand_series = pd.Series(demand)
 
-        first_origin = config.train_weeks
+        first_origin = max(config.train_weeks, config.lag_weeks[-1] + 4 + 10 + config.horizon_weeks - 1)
         last_origin = n - config.horizon_weeks
 
-        if last_origin - first_origin < config.min_origins:
+        if last_origin - first_origin + 1 < config.min_origins:
             continue
 
-        for origin_idx in range(first_origin, last_origin + 1):
-            pred_feats_base = _build_tabular_features(demand_series, origin_idx, config)
-            if pred_feats_base is None:
+        # Compute feature vectors once per account/time/horizon, not per fit.
+        cache = {}
+        for t in range(n):
+            base = _build_tabular_features(demand_series, t, config)
+            if base is None:
                 continue
-            if signal_features is not None:
-                pred_feats_base = _merge_signal_features(
-                    pred_feats_base, signal_features, entity_key, dates[origin_idx],
-                )
+            for h in range(1, config.horizon_weeks + 1):
+                feats = dict(base)
+                row = signal_index.get((entity_key, pd.Timestamp(dates[t]), h),
+                                       signal_index.get((entity_key, pd.Timestamp(dates[t]), 0)))
+                if signal_features is not None:
+                    if row and isinstance(row.get("tabular_features"), dict):
+                        feats = dict(row["tabular_features"])
+                    empty = {c: None for c in signal_features.columns if c in SIGNAL_NUMERIC_COLUMNS
+                             or c in ("net_demand_direction_30d", "target_demand_direction")}
+                    feats.update(numeric_signal_features(row or empty))
+                cache[t, h] = feats
+        for origin_idx in range(first_origin, last_origin + 1):
 
             # Direct multi-horizon: one ridge head per h, trained on (features_at_t,
             # demand[t+h]) pairs where both t and t+h are strictly before origin_idx —
             # never a single one-step model reused across every horizon.
             for h in range(1, config.horizon_weeks + 1):
-                target_idx = origin_idx + h
+                target_idx = origin_idx + h - 1
                 if target_idx >= n:
                     break
 
                 train_features = []
                 train_targets = []
 
-                for t in range(config.lag_weeks[-1] + 4, origin_idx - h + 1):
-                    target_t = t + h
-                    if target_t >= n:
-                        continue
-                    feats = _build_tabular_features(demand_series, t, config)
+                for target_t in range(max(0, origin_idx - config.train_weeks), origin_idx):
+                    t = target_t - h + 1
+                    feats = cache.get((t, h))
                     if feats is None:
                         continue
-
-                    if signal_features is not None and t < len(dates):
-                        feats = _merge_signal_features(feats, signal_features, entity_key, dates[t])
-
                     train_features.append(feats)
                     train_targets.append(demand[target_t])
 
                 if len(train_features) < 10:
                     continue
 
+                if (origin_idx, h) not in cache:
+                    continue
+                pred_feats_base = cache[origin_idx, h]
                 feature_names = sorted(train_features[0].keys())
                 X_train = np.array([[f.get(k, 0.0) for k in feature_names] for f in train_features])
                 y_train = np.array(train_targets)
@@ -282,6 +303,8 @@ def run_arm(
                     predicted=predicted,
                     arm=arm,
                     origin_cutoff=pd.Timestamp(dates[origin_idx]),
+                    horizon_step=h,
+                    mase_scale=float(np.abs(np.diff(demand[max(0, origin_idx-config.train_weeks):origin_idx])).mean()),
                 ))
 
     return result
@@ -323,6 +346,7 @@ class ExperimentMetrics:
     bias: float
     n_origins: int
     incremental_lift_vs_a: float | None = None
+    mase_unavailable_count: int = 0
 
 
 def evaluate_arm(arm_result: ArmResult, baseline_mae: float | None = None) -> ExperimentMetrics:
@@ -339,9 +363,53 @@ def evaluate_arm(arm_result: ArmResult, baseline_mae: float | None = None) -> Ex
     mae = compute_mae(actuals, preds)
     return ExperimentMetrics(
         arm=arm_result.arm,
-        mase=compute_mase(actuals, preds),
+        mase=float(np.mean([abs(o.actual-o.predicted)/o.mase_scale for o in arm_result.origins
+                            if o.mase_scale is not None and o.mase_scale > 0]))
+             if any(o.mase_scale is not None and o.mase_scale > 0 for o in arm_result.origins) else float("nan"),
         mae=mae,
         bias=compute_bias(actuals, preds),
         n_origins=len(arm_result.origins),
         incremental_lift_vs_a=compute_incremental_lift(baseline_mae, mae) if baseline_mae else None,
+        mase_unavailable_count=sum(o.mase_scale is None or o.mase_scale <= 0 for o in arm_result.origins),
     )
+
+
+SIGNAL_NUMERIC_COLUMNS = (
+    "has_active_signal_30d", "signal_count_30d", "expected_qty_delta_next_horizon",
+    "committed_qty", "cancelled_qty_30d", "delay_count_90d", "nearest_effective_start_days",
+    "days_since_latest_signal", "independent_source_count_30d", "active_conflict_count",
+    "signed_pct_change", "active_demand_signal_count", "supply_signal_count", "conditional_signal_count",
+    "asserted_signal_count", "expected_signal_count", "likely_signal_count", "possible_signal_count",
+)
+
+
+def numeric_signal_features(row: dict) -> dict[str, float]:
+    out = {}
+    # An absent column is intentionally absent (ablation); a null value is missing.
+    for name in SIGNAL_NUMERIC_COLUMNS:
+        if name not in row:
+            continue
+        value = row[name]
+        missing = value is None or bool(pd.isna(value))
+        out[name] = 0.0 if missing else float(value)
+        out[name + "_missing"] = float(missing)
+    for column,prefix in (("net_demand_direction_30d","dir_"),("target_demand_direction","target_dir_")):
+        if column in row:
+            for direction in ("INCREASE", "DECREASE", "MIXED"):
+                out[prefix + direction.lower()] = float(row[column] == direction)
+    return out
+
+
+def paired_origins(a: ArmResult, b: ArmResult) -> tuple[list[OriginResult], list[OriginResult]]:
+    def index(result):
+        keys = {(o.entity_key, o.origin_week_index, o.horizon_step): o for o in result.origins}
+        if len(keys) != len(result.origins):
+            raise ValueError("Duplicate forecast evaluation keys")
+        return keys
+    left, right = index(a), index(b)
+    if left.keys() != right.keys():
+        raise ValueError("Forecast arms have different account/cutoff/horizon keys")
+    keys = sorted(left)
+    if any(left[k].actual != right[k].actual for k in keys):
+        raise ValueError("Paired arms have different actual outcomes")
+    return [left[k] for k in keys], [right[k] for k in keys]

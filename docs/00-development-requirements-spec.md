@@ -1,3 +1,5 @@
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 00 — Development Requirements Specification
 
 **Status key:** `CONFIRMED` = stated in the research package or by the project owner · `PROPOSED` = engineering recommendation requiring sign-off · `OPEN` = insufficient information, named owner must resolve.
@@ -52,7 +54,7 @@ This document answers the 28 questions from the Developer Handoff (Section 4), r
 
 ## 9. What APIs/data contracts are required?
 
-`PROPOSED`. For the POC: three JSON Schema contracts (evidence, signal, feature) validated locally via `jsonschema`/Pydantic; a callable local Python interface (not a network service) for the forecasting experiment to pull point-in-time features. A localhost-only thin HTTP layer is optional and only added if it's needed to demonstrate the "machine-consumable serving" requirement from the original brief — see `04-api-data-contracts.md`.
+`PROPOSED`. For the POC: three JSON Schema contracts (evidence, signal, feature) validated locally via `jsonschema`/Pydantic; a callable local Python interface (not a network service) for the forecasting experiment to pull point-in-time features. The localhost HTTP layer is required and consumed in the acceptance run — see `04-api-data-contracts.md`.
 
 ## 10. What components need to be built?
 
@@ -84,7 +86,7 @@ This document answers the 28 questions from the Developer Handoff (Section 4), r
 
 ## 17. How will features be served?
 
-`PROPOSED`. Batch retrieval from local Parquet/DuckDB tables via a callable Python function (`get_features(entity_keys, cutoff, feature_set_version)`), returning values plus freshness/lineage metadata. An optional localhost HTTP wrapper may be added late if useful for demonstrating "machine-consumable" serving. No online/low-latency store — see Non-Goals.
+`PROPOSED`. Batch retrieval from local Parquet/DuckDB tables via a callable Python function (`get_features(entity_keys, cutoff, feature_set_version)`), returning values plus freshness/lineage metadata. The localhost HTTP provider is required for the forecast acceptance demonstration. No online/low-latency store — see Non-Goals.
 
 ## 18. How will lineage be maintained?
 
@@ -128,4 +130,4 @@ This document answers the 28 questions from the Developer Handoff (Section 4), r
 
 ## 28. Which questions remain unanswered?
 
-`OPEN`. See `14-open-questions.md` for the full register. Headline items: forecast grain/horizon/cadence/cutoff semantics (no real forecasting team input available); business-approved minimum meaningful forecast lift; exact local LLM/runtime that is actually installable in this environment (technology matrix proposes candidates pending a feasibility check); whether a localhost HTTP layer is worth building or a callable Python API suffices for this capstone's grading/demo needs.
+`OPEN`. See `14-open-questions.md` for the full register. Headline items: forecast grain/horizon/cadence/cutoff semantics (no real forecasting team input available); business-approved minimum meaningful forecast lift; exact local LLM/runtime that is actually installable in this environment (technology matrix proposes candidates pending a feasibility check); the real-data validation required after this synthetic demonstration.

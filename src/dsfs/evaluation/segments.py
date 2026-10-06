@@ -21,7 +21,7 @@ def per_horizon(origins: list[OriginResult]) -> dict[int, list[OriginResult]]:
     """Group origins by horizon step h = horizon_week_index - origin_week_index."""
     grouped: dict[int, list[OriginResult]] = defaultdict(list)
     for o in origins:
-        h = o.horizon_week_index - o.origin_week_index
+        h = o.horizon_step
         grouped[h].append(o)
     return dict(sorted(grouped.items()))
 
@@ -34,8 +34,13 @@ def signal_exposed_subset(
     if signal_features is None or signal_features.empty or "has_active_signal_30d" not in signal_features.columns:
         return []
     signal_features = normalize_cutoff_column(signal_features)
-    exposed = signal_features.loc[signal_features["has_active_signal_30d"] == True]  # noqa: E712
-    exposed_keys = set(zip(exposed["entity_key"], exposed["forecast_cutoff"]))
+    mask = (signal_features["active_demand_signal_count"] > 0 if "active_demand_signal_count" in signal_features
+            else signal_features["has_active_signal_30d"] == True)  # noqa: E712
+    exposed = signal_features.loc[mask]
+    weekly = "horizon_step" in exposed
+    exposed_keys = (set(zip(exposed["entity_key"], exposed["forecast_cutoff"], exposed["horizon_step"]))
+                    if weekly else set(zip(exposed["entity_key"], exposed["forecast_cutoff"])))
     if not exposed_keys:
         return []
-    return [o for o in origins if (o.entity_key, o.origin_cutoff) in exposed_keys]
+    return [o for o in origins if ((o.entity_key, o.origin_cutoff, o.horizon_step) if weekly
+                                  else (o.entity_key, o.origin_cutoff)) in exposed_keys]

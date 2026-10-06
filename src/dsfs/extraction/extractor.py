@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import json
+import re
 from uuid import NAMESPACE_URL, uuid5
 
 from dsfs.extraction.entity_resolution import resolve_entities
@@ -37,8 +38,8 @@ from dsfs.models.signal_record import (
 )
 from dsfs.models.source_evidence import SourceEvidence
 
-DEFAULT_EXTRACTOR_VERSION = "rules-v0.2.0"
-DEFAULT_EXTRACTION_CONFIG_VERSION = "cfg-v0.2.0"
+DEFAULT_EXTRACTOR_VERSION = "rules-v0.3.0"
+DEFAULT_EXTRACTION_CONFIG_VERSION = "cfg-v0.3.0"
 
 _IMPACT_CHANNEL_BY_TYPE: dict[SignalType, ImpactChannel] = {
     SignalType.DEMAND_EXPECTATION: ImpactChannel.DEMAND,
@@ -48,7 +49,7 @@ _IMPACT_CHANNEL_BY_TYPE: dict[SignalType, ImpactChannel] = {
     SignalType.TIMING_REVISION: ImpactChannel.DEMAND,
     SignalType.INVENTORY_POSITION: ImpactChannel.DEMAND,
     SignalType.COMMERCIAL_EVENT: ImpactChannel.DEMAND,
-    SignalType.MARKET_CONTEXT: ImpactChannel.DEMAND,
+    SignalType.MARKET_CONTEXT: ImpactChannel.FULFILLMENT,
     SignalType.SUPPLY_FULFILLMENT: ImpactChannel.FULFILLMENT,
     SignalType.OTHER_RELEVANT: ImpactChannel.UNKNOWN,
     SignalType.NO_SIGNAL: ImpactChannel.UNKNOWN,
@@ -65,6 +66,7 @@ def extract_signal(
     extracted_at: datetime | None = None,
 ) -> SignalRecord:
     text = evidence.raw_text
+    refs = set(re.findall(r"\bplan reference ([A-Za-z0-9-]+)", text, re.IGNORECASE))
 
     direction, negated, conflict = detect_direction_and_negation(text)
     signal_type = detect_signal_type(text)
@@ -76,6 +78,9 @@ def extract_signal(
 
     validation_status = ValidationStatus.PASS
     abstention_reasons: list[str] = []
+    if len(refs) > 1:
+        validation_status = ValidationStatus.REVIEW
+        abstention_reasons.append("ambiguous business-event references")
 
     if conflict:
         validation_status = ValidationStatus.REVIEW
@@ -114,6 +119,7 @@ def extract_signal(
     evidence_ref = EvidenceRef(source_id=evidence.source_id, char_start=0, char_end=len(text))
 
     return SignalRecord(
+        business_event_ref=next(iter(refs)) if len(refs) == 1 else None,
         signal_id="sig-" + uuid5(NAMESPACE_URL, json.dumps([
             evidence.source_id, evidence.source_revision, extractor_version,
             extraction_config_version, extraction_run_id,

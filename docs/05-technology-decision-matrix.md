@@ -1,3 +1,5 @@
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 05 — Technology Decision Matrix
 
 All choices below satisfy the confirmed **offline/local-only** constraint: no hosted APIs, no cloud services, no network egress required by any component. Everything must run on a single local machine (assume CPU-only unless a local GPU is confirmed available — `OPEN`, see `14-open-questions.md`).

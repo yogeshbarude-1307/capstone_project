@@ -19,6 +19,7 @@ def test_schema_dir_contains_the_three_canonical_contracts():
         "source_evidence.schema.json",
         "signal_record.schema.json",
         "forecast_feature.schema.json",
+        "demand_feature.schema.json",
     }
 
 

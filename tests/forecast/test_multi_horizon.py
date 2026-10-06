@@ -59,4 +59,4 @@ def test_each_horizon_trained_on_strictly_past_target_pairs():
     result = run_arm(d0, config, "A", signal_features=None)
     assert len(result.origins) > 0
     for o in result.origins:
-        assert o.horizon_week_index > o.origin_week_index
+        assert o.horizon_week_index == o.origin_week_index + o.horizon_step - 1

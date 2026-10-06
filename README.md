@@ -1,202 +1,124 @@
-# Demand Signal Feature Service — POC
+# Demand Signal Feature Service
 
-An offline, local-only proof of concept testing whether qualitative business
-notes can be turned into point-in-time-correct demand-signal features that
-measurably improve a forecast versus a tabular-only baseline. See
-`docs/00-development-requirements-spec.md` for the full requirements
-reconciliation, and `docs/12-implementation-milestones.md` for the build
-sequence.
+A local Python demonstration that turns synthetic business notes into structured,
+point-in-time demand features and evaluates whether they improve weekly customer
+demand forecasts. Supplier fulfillment signals remain separate. The pipeline uses
+rules-based extraction, Parquet, numpy Ridge regression, and a real localhost HTTP
+feature service. No pipeline step calls a hosted model or downloads data.
 
-**Everything in this repo runs locally, offline. No hosted LLM APIs, no
-cloud storage, no external services.**
+The authoritative requirements and metric definitions are in
+[the realignment acceptance contract](docs/20-realignment-acceptance.md).
+Documents 00–19 preserve historical designs and evidence; conflicting historical
+claims do not describe the current implementation.
 
-## Status
+## Setup (PowerShell)
 
-- **Milestone 0** (documentation package) — complete; updated to distinguish the
-  implemented baseline from the proposed hybrid architecture.
-- **Milestone 1** (foundation) — restored and verified. Typed Pydantic models,
-  canonical JSON Schema validation (including timestamp formats), UTC timestamp
-  normalization, configuration, and contract tests are present. Python source
-  under `src/dsfs/models/` is no longer excluded by the model-weight ignore rule.
-- **Milestone 2** (synthetic dataset) — implemented and verified. Seeded demand,
-  notes, source IDs, and separate generator ground truth are reproducible.
-  Default run: 40 entities, 104 weeks, 4,160 demand rows, 675 notes.
-- **Milestone 3** (extraction) — verified **rules baseline**. Regex semantics and
-  exact matching of supplied entity mentions; statistical NER and the local LLM
-  are not implemented. Includes distinct physical revision IDs, append-only
-  storage with idempotent retries, persisted rejected records, conservative
-  reversal linking, and a historical ledger view that preserves earlier state.
-  Ambiguous reversals stay `REVIEW`; they never silently retire a guessed claim.
-- **Milestone 4** (extraction evaluation) — evaluation machinery implemented:
-  annotation contract, split checks, field/event/abstention/grounding metrics,
-  diagnostics, and reproducible report bundles. Includes 40 **provisional**
-  development challenge notes. Human adjudication and held-out D2 evaluation
-  remain pending; see `docs/15-extraction-evaluation-workflow.md`.
-- **Milestone 5** (signal-to-feature transformation) — implemented. PIT-correct
-  feature building with weekly UTC cutoffs and 28-day horizons. Eligible signals
-  are filtered by available_at <= cutoff, effective-period/horizon intersection,
-  and ACTIVE record status. Percentages stay separate from quantities. 30-day
-  lookback for presence/direction/recency; 90-day lookback for delay counts.
-  Every feature row passes the forecast_feature JSON Schema contract.
-- **Milestone 6** (feature access layer) — implemented. `FeatureStore` provides
-  `get_features()` (batch point-in-time retrieval) and `get_historical_features()`
-  (DataFrame for the forecasting experiment harness). Raw note text is never
-  returned. `load_feature_store()` loads from persisted ledger + notes for a
-  specific extraction run. CLI via `dsfs-features --run-id <extraction_run_id>`.
-- **Milestone 7** (forecast baseline) — implemented. Arm A: rolling-origin CV
-  with Ridge regression using lag, seasonal, and rolling-window features. Pure
-  numpy implementation (no sklearn/scipy dependency). Frozen `ForecastConfig`
-  ensures identical model config across all arms.
-- **Milestone 8** (enhanced forecast arms) — implemented. Arm B: oracle features
-  from generator ground truth. Arm C: extracted-signal features via the feature
-  access layer. Arm D: shuffled control (entity-time alignment broken, seeded).
-  Decision logic from docs/08 applied automatically. Mandatory reporting caveat
-  included. CLI via `dsfs-forecast --run-id <extraction_run_id>`.
-- **Milestone 9** (controlled evaluation and ablations) — implemented at POC
-  scope. Ablation matrix (5 of 9 docs/08 rows; 4 documented as not implemented,
-  never fabricated), bootstrap CI, paired-permutation test, per-horizon and
-  signal-exposed-subset segmentation. `dsfs-forecast --ablation full`.
-- **Milestone 10** (lineage, freshness, drift) — implemented at POC scope.
-  Feature→signal→evidence lineage tracing, extraction-latency freshness,
-  5 of 7 docs/10 seeded drift scenarios, pure-numpy KS/chi-square detectors,
-  no-drift-window calibration, persistence-based alerting. `dsfs-lineage`,
-  `dsfs-drift-report`.
-- **Milestone 11** (end-to-end POC) — implemented. `dsfs-run` chains every
-  stage into one command producing a manifest with per-artifact and code
-  SHA-256 hashes.
-- **Milestone 12** (findings and production gap) — complete. `docs/17-poc-findings.md`
-  documents all Gate A–I results (real numbers, no fabricated figures), the
-  mandatory reporting caveat verbatim, and the B≈A decision-logic branch that
-  fired. `docs/18-production-gap.md` assesses every non-goal and priority-orders
-  the seven production gaps. 18 acceptance tests in `tests/test_m12_acceptance.py`
-  verify the caveat is present verbatim and every non-goal from `docs/01` is
-  explicitly addressed.
+Run from this checkout. Python 3.11+ is declared; the verified environment uses
+Python 3.14.7 on Windows. Dependency installation needs internet access or a local
+wheelhouse; execution thereafter stays offline.
 
-**Two critical bugs were found and fixed while implementing M9-M11** — both
-made prior forecast results on real (non-fixture) data meaningless: a
-`forecast_cutoff` dtype mismatch meant arms B/C/D never actually received
-merged signal features (numerically identical to arm A), and `build_d3`
-referenced a column name (`week_start`) that never existed in real D0 output.
-See `docs/13-risks-and-dependencies.md` for the full list.
-
-- **Gradio UI** — `src/dsfs/app.py`. Five-tab local dashboard (Run Pipeline,
-  Forecast Results, Extraction Metrics, Drift Monitoring, Lineage Explorer).
-  Launch with `dsfs-app` after `pip install 'dsfs[ui]'`.
-
-Verification on Windows / Python 3.13.14: **317 tests passed** (up from 315).
-A default D0/D1 → extraction run accepted all 675 records with zero schema
-rejections. This is **schema conformance, not extraction accuracy**. The
-vocabulary is still close to the generator templates; meaningful semantic
-scores require held-out, independently adjudicated D2 labels. See
-`docs/07-extraction-pipeline-design.md` for the baseline limitations and
-`docs/12-implementation-milestones.md` for remaining acceptance work.
-
-## Layout
-
-```text
-docs/                         Numbered requirements/designs and canonical schemas
-src/dsfs/
-  config.py, contracts.py      Local settings and wire-contract validation
-  models/                     Evidence, signal, and forecast-feature models
-  synth/                      Latent state, notes, demand, and dataset writer
-  extraction/                 Rules, entity matching, reconciliation, ledger
-  evaluation/                 D2 contracts, metrics, runner, report writer
-  features/                   PIT feature transformer, access layer, D3 builder
-  forecast/                   4-arm experiment harness, oracle, shuffle, report
-  app.py                      Gradio dashboard (5 tabs, offline localhost UI)
-tests/                        Component and evaluation regression tests
-data/annotations/             Versioned, reviewable D2 labels (tracked)
-data/{raw,interim,processed}/  Generated local artifacts (gitignored)
-reports/                      Generated evaluation/drift reports
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -c requirements-tested.txt
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
-## Setup and verification
+The dependency snapshot includes runtime, test and server packages. Canonical
+schemas live in this checkout, so retain `docs/schemas` with the editable install.
+Actual versions and source hashes are also captured in each completed manifest.
 
-Run commands from the directory containing this README and `pyproject.toml`.
-Python 3.11+ is declared; the tested dependency snapshot is for Python 3.14.4
-on Windows. Use a local virtual environment and an editable source install
-(the canonical schemas remain in this checkout's `docs/schemas/`).
+## Reproduce the demonstration
 
-```bash
-python -m pip install -r requirements.txt
-python -m pytest -q
-python -m dsfs.synth.generator
-python -m dsfs.extraction.pipeline
-python -m dsfs.evaluation.pipeline
-python -m dsfs.features.pipeline --run-id <extraction_run_id>
-python -m dsfs.forecast.pipeline --run-id <extraction_run_id> --ablation full
-python -m dsfs.lineage --run-id <extraction_run_id>
-python -m dsfs.orchestrate --config configs/e2e_smoke.json
+```powershell
+# Small HTTP-backed regression demonstration
+.\.venv\Scripts\dsfs-run.exe --config configs/e2e_smoke.json
+
+# Complete 40-account / 104-week evidence bundle, writing drift and review package
+.\.venv\Scripts\dsfs-run.exe --config configs/e2e_full.json
+
+# Development seeds 1–3, then frozen evaluation 101–105 and 10-account ablations
+.\.venv\Scripts\dsfs-study.exe
+
+# Open http://127.0.0.1:8000 after starting the dashboard
+.\.venv\Scripts\dsfs-server.exe
 ```
 
-`dsfs.orchestrate` (console script `dsfs-run`) chains every stage above into
-one command and writes `reports/manifest.json` with per-artifact and code
-SHA-256 hashes. Use `configs/e2e_full.json` for the default POC scale (40
-entities, 104 weeks) or `configs/e2e_smoke.json` for a fast (~15s) sanity check.
+Choose one completed run in the dashboard. The Run Pipeline button creates a new
+smoke run; it does not overwrite the selected evidence. Forecast, extraction,
+drift and lineage views all select the same immutable run. Freshness metadata is
+shown across views. Completed independent-review bundles at the documented external path are shown separately in the extraction view. The full command includes a separate, controlled writing-change
+experiment with identical demand in the changed and unchanged corpora.
 
-### Web dashboard (FastAPI + vanilla HTML/JS)
+Artifacts live under `reports/runs/<run-id>/{raw,processed,interim,reports}`.
+Completed manifests are published atomically; `reports/manifest.json` points to
+the latest completed run. Concurrent pipeline runs are rejected. Failed runs keep
+`failure.json` and are excluded from completed-run selection. Older artifacts are
+preserved. Study settings, run IDs, paired intervals and findings live under
+`reports/studies/<study-id>`.
 
-```bash
-pip install ".[server]"   # adds fastapi + uvicorn (usually already installed)
-dsfs-server               # opens http://127.0.0.1:8000
+## Interpretation
+
+At Monday 00:00 UTC cutoff t, horizons 1–4 predict `[t,t+7d)` through
+`[t+21d,t+28d)`. Only completed earlier demand periods enter training and lags.
+The training target window is the trailing 52 weeks. MASE scales each account's
+errors by its training-only mean absolute one-week change; zero denominators are
+unavailable and counted. MAE and signed bias are also reported. Confidence
+intervals resample complete paired account trajectories within each seed.
+
+The four arms share one model policy: A tabular baseline; B generator
+interpretations through shared aggregation; C text interpretations retrieved over
+HTTP; D features assigned to different accounts at the same cutoff. D is unavailable
+for a single account. Ablations remove disallowed columns, including their missingness
+indicators. Feature matrices and completed full-arm results are reused in ablations.
+
+Simulated hourly publication is distinct from actual extraction/execution time.
+Freshness measures source availability to publication against 60 minutes; note age
+is reported separately. An injected delayed batch demonstrates a breach. Only PASS
+records visible at the cutoff contribute; repeated business-event references do
+not multiply magnitude, and cancellations preserve historical state.
+
+Drift monitoring compares weekly extracted percentage-presence distributions with
+an eight-week reference. An alert requires p<0.05, effect size ≥0.3 and two successive
+qualifying windows. Forecast degradation requires >10% excess MAE over the matched
+control in two successive fully mature four-week windows. Warning lead time is
+confirmation time minus alert time; missing events remain unavailable. No-drift
+runs measure the complete rule's false-alert behavior.
+
+Positive oracle lift is an experimental gate. Negative results and false alarms
+remain in the reports; synthetic results do not establish predictive value in real
+company notes. NER and local LLM extraction remain deferred.
+
+## Independent review
+
+The full run prepares `reports/review/review_dataset.json` inside its run directory:
+35 natural-prevalence notes and 15 new challenge notes, grouped with preceding source
+context. The package contains no predictions or generator truth. Its labels remain
+unfinished until an independent person completes them. The evaluator rejects
+placeholder labels and empty scored fields.
+
+Follow the accompanying `REVIEW_INSTRUCTIONS.md`, save completed labels to a **new
+working copy outside the immutable run**, then evaluate:
+
+```powershell
+.\.venv\Scripts\dsfs-evaluate.exe --dataset path\to\completed_review.json --split test --output-dir reports\independent-reviews\<run-id>
 ```
 
-A fully offline, single-page dashboard with five views:
+Single-review human results are reported separately by cohort and from provisional
+starter labels. Do not use `--require-gold`: that older mode requires double
+adjudication. No independent accuracy claim is made while this package is pending.
 
-| View | What it answers |
+## Code map
+
+| Path | Responsibility |
 |---|---|
-| **Signal Intelligence** | What do the extracted notes say about future demand? Live filterable signal table with status badges, demand metrics, and a slide-in evidence panel that highlights the exact evidence span. |
-| **Forecast Results** | Did demand signals improve the forecast? Decision banner + 4-arm cards (A=tabular, B=oracle, C=extracted, D=shuffled) with MAE/MASE/Lift + SVG bar chart. |
-| **Extraction Quality** | How accurately did the extractor parse the notes? Field-level F1/precision/recall table, abstention stats, and the mandatory POC limitations caveat. |
-| **Drift Monitor** | Is the signal distribution changing? Detection status, latency (weeks after injection), and calibrated false-alert rate per scenario. |
-| **Lineage Tracer** | Where did a feature row come from? Entity + cutoff selector → contributing signals with evidence spans highlighted in the source note. |
+| `src/dsfs/synth` | Latent lifecycle, separate text rendering and demand realization |
+| `src/dsfs/extraction` | Rules, entity/ref resolution, append-only ledger and quarantine |
+| `src/dsfs/features` | Shared weekly aggregation, publication replay, HTTP providers/endpoints |
+| `src/dsfs/forecast` | Temporal harness, oracle interpretations and shuffled control |
+| `src/dsfs/evaluation` | Paired intervals, allowlisted ablations and blind review |
+| `src/dsfs/drift/experiment.py` | Matched writing-change/degradation and no-drift calibration |
+| `src/dsfs/runs.py`, `orchestrate.py`, `study.py` | Isolated runs, atomic completion and frozen study |
+| `src/dsfs/server.py`, `static/index.html` | Dashboard and feature API |
 
-The **Run Pipeline** button in the top bar triggers the full `run_e2e` orchestration and refreshes all views. No page reload needed.
-
-### Gradio dashboard (legacy)
-
-```bash
-pip install ".[ui]"   # adds gradio>=4.44
-dsfs-app              # opens http://127.0.0.1:7860
-```
-
-Original five-tab Gradio UI — superseded by `dsfs-server` above.
-
-`requirements.txt` installs the package itself and current runtime/test
-requirements. Optional `ner`, `local-llm`, `forecast`, `tables`, and `ui` extras in
-`pyproject.toml` are feature-specific dependencies; installing them does not enable
-unimplemented stages. The LLM flag raises explicitly if enabled.
-
-For the exact tested runtime/test versions, add
-`-c requirements-tested.txt` to the install command. This is a Windows/Python
-3.14 dependency snapshot, not a portable lock or a bundled installer. Package
-and build-tool wheels (`setuptools>=68`) must already be locally available for
-an offline install, e.g. use `--no-index --find-links <local-wheelhouse>`.
-No pipeline command downloads packages, models, or external data.
-
-If dependencies are already installed and an editable install is unavailable,
-PowerShell can run this checkout with `$env:PYTHONPATH = (Join-Path $PWD 'src')`.
-This source-path mode was used for the verification above; a fresh editable
-installation has not been verified in this environment (setuptools is absent).
-
-Normal extraction creates a new run ID and processing timestamp. To reproduce
-an identical signal snapshot, pass the same `extraction_run_id` and
-`extracted_at` to `run_extraction`. Select one run explicitly when querying
-`ledger_as_of`; different extractor runs are alternative interpretations of
-one corpus, not additional business events. Historical replay uses source
-`available_at`, while `extracted_at` records the actual batch-processing time.
-
-Evaluation writes a frozen input snapshot, predictions, quarantine and JSON/
-Markdown results under `reports/extraction/`. The starter is explicitly
-provisional: its actionable-event macro-F1 is 0.4158 despite 100% schema-valid
-output. It is not human gold or a blind holdout. See docs/15 for metric
-definitions, reviewer metadata, and the `--require-gold` gate.
-
-## Key documents to read first
-
-1. `docs/00-development-requirements-spec.md` — what/why, reconciled from five prior research passes.
-2. `docs/03-data-model.md` — the three-layer data model and the point-in-time eligibility rule (the single most important correctness constraint in the project).
-3. `docs/08-forecasting-experiment-design.md` — the 4-arm experiment that answers the actual business hypothesis.
-4. `docs/17-poc-findings.md` — what the POC actually found, from a real full-scale run.
-5. `docs/18-production-gap.md` — what's missing before any production claim.
-6. `docs/14-open-questions.md` — what's still unresolved and who resolves it.
+The legacy Gradio app remains available via the optional `ui` extra; the supported
+realignment demonstration uses `dsfs-server`.

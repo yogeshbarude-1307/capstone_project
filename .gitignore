@@ -28,4 +28,15 @@ runs/
 reports/*.json
 reports/*.html
 reports/extraction/
+reports/runs/
+reports/studies/
+reports/drift/
 !reports/.gitkeep
+
+# Local verification and unfinished reviewer working copies
+reports/.pipeline.lock
+reports/dashboard*
+reports/review-development/
+reports/independent-reviews/
+reports/*.log
+reports/*.xml

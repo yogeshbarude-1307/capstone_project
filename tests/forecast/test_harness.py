@@ -78,7 +78,7 @@ class TestRollingOrigin:
         config = ForecastConfig(train_weeks=40, horizon_weeks=2, min_origins=5)
         result = run_arm(d0, config, "A")
         for o in result.origins:
-            assert o.horizon_week_index > o.origin_week_index
+            assert o.horizon_week_index == o.origin_week_index + o.horizon_step - 1
 
     def test_predictions_are_nonnegative(self):
         d0 = _make_d0()
@@ -173,7 +173,7 @@ class TestShuffledControl:
         pd.testing.assert_frame_equal(s1, s2)
 
     def test_shuffle_different_seeds_differ(self):
-        d0 = _make_d0()
+        d0 = _make_d0(n_entities=5)
         features = _make_signal_features(d0)
         s1 = shuffle_features(features, seed=42)
         s2 = shuffle_features(features, seed=99)

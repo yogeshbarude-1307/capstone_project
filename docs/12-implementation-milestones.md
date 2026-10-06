@@ -1,3 +1,5 @@
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 12 — Implementation Milestones
 
 Adapted directly from the Developer Handoff's own milestone list (Section 18), reconciled with the offline/local-only constraint. Each milestone lists objective, inputs/outputs, components affected, dependencies, tests, and acceptance criteria per the handoff's requested output format (Section 20). This documentation package (docs 00–14 + schemas) **is Milestone 0**; it is complete as of this writing.

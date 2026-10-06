@@ -24,6 +24,7 @@ class GeneratorConfig(BaseModel):
     # expected to abstain on most notes — this is the intended stress test,
     # not a bug to fix here.
     entity_paraphrase_mode: Literal["none", "mild", "aggressive"] = "none"
+    explicit_dates: bool = True
 
     # --- Seeded drift scenarios (docs/10, Milestone 10 D4) ---
     # Only text/metadata-level scenarios are implemented (confined to

@@ -7,8 +7,11 @@
   "forecast": {
     "train_weeks": 52,
     "horizon_weeks": 4,
-    "ablation": "full"
+    "ablation": "none"
   },
   "lineage_sample_size": 20,
-  "evaluation_dataset": "data/annotations/d2_starter.json"
+  "prepare_review": true,
+  "writing_drift": {},
+  "evaluation_dataset": "data/annotations/d2_starter.json",
+  "mechanics_check": true
 }

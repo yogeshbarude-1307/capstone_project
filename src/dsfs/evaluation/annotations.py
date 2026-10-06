@@ -104,15 +104,19 @@ class AnnotatedCase(ContractModel):
 
 
 class AnnotationDataset(ContractModel):
-    schema_version: Literal["d2-0.1.0"] = "d2-0.1.0"
+    schema_version: Literal["d2-0.1.0", "d2-0.2.0"] = "d2-0.2.0"
     dataset_id: str
     description: str
     known_entities: list[str]
     cases: list[AnnotatedCase] = Field(min_length=1)
+    scenario_context: dict[str, list[SourceEvidence]] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def check_dataset(self):
         sources = {c.evidence.source_id: c for c in self.cases}
+        contexts = {s.source_id:(scenario,s) for scenario,notes in self.scenario_context.items() for s in notes}
+        if set(contexts) & set(sources):
+            raise ValueError("Context notes must not duplicate scored cases")
         if len(sources) != len(self.cases):
             raise ValueError("Duplicate source IDs in D2")
         partitions: dict[tuple[str, str], tuple[str, str]] = {}
@@ -131,6 +135,11 @@ class AnnotationDataset(ContractModel):
             target_id = case.expected.supersedes_source_id
             if target_id:
                 target = sources.get(target_id)
+                context = contexts.get(target_id)
+                if target is None and context:
+                    if context[0] != case.scenario_id or context[1].available_at > case.evidence.authored_at:
+                        raise ValueError("Supersession context must be earlier and in the same scenario")
+                    continue
                 if target is None or target.scenario_id != case.scenario_id or target_id == case.evidence.source_id:
                     raise ValueError("Supersession must reference a different source in the same scenario")
                 if target.evidence.available_at > case.evidence.authored_at:

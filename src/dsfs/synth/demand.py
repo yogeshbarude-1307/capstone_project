@@ -18,6 +18,7 @@ import pandas as pd
 
 from dsfs.synth.config import GeneratorConfig
 from dsfs.synth.latent import HiddenState, Knowable
+from dsfs.models.common import as_utc
 
 
 def realize_demand(
@@ -88,8 +89,9 @@ def realize_demand(
                 _, realized_frac = realized_deltas[hs.event_id]
                 if realized_frac == 0.0:
                     continue
-                if hs.effective_start < week_end_dt and hs.effective_end > week_start_dt:
-                    event_delta += level_t * realized_frac
+                end = min(as_utc(hs.effective_end), as_utc(hs.cancellation_at)) if hs.cancellation_at else as_utc(hs.effective_end)
+                overlap = max(0.0, (min(end, week_end_dt)-max(as_utc(hs.effective_start), week_start_dt)).total_seconds())
+                event_delta += level_t * realized_frac * overlap / (7 * 86400)
 
             noise_factor = 1.0 + rng.gauss(0.0, config.demand_noise_frac)
             demand = max(0.0, (level_t + event_delta) * noise_factor)
@@ -113,4 +115,4 @@ def date_from_week(start_date: date, week_index: int) -> date:
 def _to_datetime(d: date):
     from datetime import datetime
 
-    return datetime.combine(d, datetime.min.time())
+    return as_utc(datetime.combine(d, datetime.min.time()))

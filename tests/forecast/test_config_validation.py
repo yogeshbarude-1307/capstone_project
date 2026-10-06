@@ -9,7 +9,7 @@ from dsfs.forecast.harness import ForecastConfig
 
 def test_default_config_is_valid():
     cfg = ForecastConfig()
-    assert cfg.lag_weeks == sorted(cfg.lag_weeks)
+    assert cfg.lag_weeks == tuple(sorted(cfg.lag_weeks))
 
 
 def test_unsorted_lag_weeks_rejected():

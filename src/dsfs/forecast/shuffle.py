@@ -29,15 +29,20 @@ def shuffle_features(
     """
     if features_df.empty:
         return features_df.copy()
+    if features_df["entity_key"].nunique() < 2:
+        raise ValueError("Shuffled control is unavailable for a single account")
 
     rng = random.Random(seed)
     result_rows = []
 
-    for cutoff, group in features_df.groupby("forecast_cutoff"):
+    groups = ["forecast_cutoff"] + (["horizon_step"] if "horizon_step" in features_df else [])
+    for cutoff, group in features_df.groupby(groups):
         rows = group.to_dict("records")
         entities = [r["entity_key"] for r in rows]
         shuffled_entities = entities.copy()
-        rng.shuffle(shuffled_entities)
+        # A nonzero cyclic offset guarantees a different account for every row.
+        offset = rng.randrange(1, len(entities))
+        shuffled_entities = entities[offset:] + entities[:offset]
         for row, new_entity in zip(rows, shuffled_entities):
             new_row = row.copy()
             new_row["entity_key"] = new_entity

@@ -68,6 +68,14 @@ class FeatureStore:
         self._lookback_days = lookback_days
         self._staleness_threshold_days = staleness_threshold_days
 
+    def _as_of(self, cutoff):
+        runs = {s.extraction_run_id for s in self._signals}
+        if len(runs) > 1:
+            raise ValueError("Feature store must select one extraction run")
+        if not runs:
+            return []
+        return ledger_as_of(self._signals, self._sources, cutoff, extraction_run_id=next(iter(runs)))
+
     def get_features(
         self,
         entity_keys: list[str],
@@ -85,7 +93,7 @@ class FeatureStore:
 
         for entity_key in entity_keys:
             eligible = select_eligible_signals(
-                self._signals,
+                self._as_of(cutoff),
                 entity_key,
                 cutoff,
                 self._source_available_at,
@@ -124,7 +132,7 @@ class FeatureStore:
         for entity_key, cutoff in entity_cutoff_pairs:
             cutoff = as_utc(cutoff)
             eligible = select_eligible_signals(
-                self._signals,
+                self._as_of(cutoff),
                 entity_key,
                 cutoff,
                 self._source_available_at,

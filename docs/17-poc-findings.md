@@ -1,3 +1,7 @@
+> Current measured findings: [realignment findings](21-realignment-findings.md). The report below is historical evidence.
+
+> Historical design/evidence: the [realignment acceptance contract](20-realignment-acceptance.md) supersedes conflicting scope and semantics below. The current target is weekly customer demand, Monday UTC cutoffs, four separate weekly horizons, PASS-only published signals, required HTTP consumption, a one-hour simulated freshness target, and matched forecast-degradation lead time. Earlier test counts and results require revalidation.
+
 # 17 — POC Findings
 
 Written 2026-09-27, from a real `dsfs-run` execution at POC default scale
@@ -208,13 +212,7 @@ the extractor — the bottleneck (if there is one worth chasing) is upstream of
 extraction quality, at the level of "does this feature representation and
 model configuration expose the planted signal at all."
 
-> This POC demonstrates that a deliberately planted, causally-consistent early
-> signal can be recovered from synthetic notes and shown to add measurable
-> value to a forecast under controlled conditions. It does **not** demonstrate
-> that real company account/service/supplier notes contain comparable
-> predictive information, at what prevalence, or with what real lead time.
-> Real-data validation is a required, separate, subsequent gate before any
-> production claim is made.
+> This synthetic POC evaluates whether early qualitative signals improve forecasts. Positive forecast value is established only when the reported comparison supports it. It does **not** demonstrate that real company account/service/supplier notes contain comparable predictive information, at what prevalence, or with what real lead time. Real-data validation is a required, separate, subsequent gate before any production claim is made.
 
 In this run, even the "shown to add measurable value under controlled
 conditions" half of that sentence did not hold at default configuration — a

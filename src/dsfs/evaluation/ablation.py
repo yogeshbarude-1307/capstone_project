@@ -17,9 +17,9 @@ from dsfs.forecast.harness import ArmResult, ForecastConfig, evaluate_arm, run_a
 
 # Column groups, additive: each ablation keeps its own group plus every group
 # before it in the matrix (docs/08 "Signal presence only" -> "+ effective time").
-_PRESENCE_COLS = ["has_active_signal_30d", "signal_count_30d"]
-_DIRECTION_COLS = ["net_demand_direction_30d"]
-_MAGNITUDE_COLS = ["expected_qty_delta_next_horizon", "committed_qty", "cancelled_qty_30d"]
+_PRESENCE_COLS = ["has_active_signal_30d", "signal_count_30d", "active_demand_signal_count"]
+_DIRECTION_COLS = ["net_demand_direction_30d", "target_demand_direction"]
+_MAGNITUDE_COLS = ["expected_qty_delta_next_horizon", "committed_qty", "cancelled_qty_30d", "signed_pct_change"]
 _TIME_COLS = ["nearest_effective_start_days", "delay_count_90d", "days_since_latest_signal", "active_conflict_count"]
 
 ABLATIONS: dict[str, list[str]] = {
@@ -28,14 +28,11 @@ ABLATIONS: dict[str, list[str]] = {
     "direction": _PRESENCE_COLS + _DIRECTION_COLS,
     "magnitude": _PRESENCE_COLS + _DIRECTION_COLS + _MAGNITUDE_COLS,
     "effective_time": _PRESENCE_COLS + _DIRECTION_COLS + _MAGNITUDE_COLS + _TIME_COLS,
+    "business_certainty_conditionality": _PRESENCE_COLS + _DIRECTION_COLS + _MAGNITUDE_COLS + _TIME_COLS + ["asserted_signal_count", "expected_signal_count", "likely_signal_count", "possible_signal_count", "conditional_signal_count"],
     "full": None,  # no masking — every column the feature store produces
 }
 
 NOT_IMPLEMENTED: dict[str, str] = {
-    "business_certainty_conditionality": (
-        "ForecastFeatureRecord carries no business_certainty/conditionality field; "
-        "would require new feature engineering, not present in this POC's D3 schema."
-    ),
     "aggregate_only_no_entity_resolution": (
         "Requires a distinct cross-entity aggregate feature set; not built in this POC."
     ),
@@ -54,7 +51,7 @@ _ALL_MASKABLE_COLS = _PRESENCE_COLS + _DIRECTION_COLS + _MAGNITUDE_COLS + _TIME_
 
 def apply_ablation(signal_features: pd.DataFrame | None, ablation: str) -> pd.DataFrame | None:
     """Return a copy of ``signal_features`` with only the ablation's allowed
-    columns populated; every other maskable column is nulled so ``run_arm``'s
+    columns present; every other predictive column is removed so ``run_arm``'s
     merge treats it as absent (see ``_merge_signal_features``)."""
     if signal_features is None or signal_features.empty:
         return signal_features
@@ -64,10 +61,9 @@ def apply_ablation(signal_features: pd.DataFrame | None, ablation: str) -> pd.Da
     if allowed is None:
         return signal_features
     out = signal_features.copy()
-    for col in _ALL_MASKABLE_COLS:
-        if col not in allowed and col in out.columns:
-            out[col] = None
-    return out
+    from dsfs.forecast.harness import SIGNAL_NUMERIC_COLUMNS
+    predictive = set(SIGNAL_NUMERIC_COLUMNS) | set(_DIRECTION_COLS)
+    return out.drop(columns=[c for c in predictive if c in out and c not in allowed])
 
 
 def run_ablation_matrix(
@@ -77,6 +73,7 @@ def run_ablation_matrix(
     *,
     arm_label: str,
     baseline_result: ArmResult,
+    full_result: ArmResult | None = None,
 ) -> dict[str, ArmResult]:
     """Run one arm (B or C) under every implemented ablation.
 
@@ -86,6 +83,9 @@ def run_ablation_matrix(
     """
     results: dict[str, ArmResult] = {}
     for name in ABLATIONS:
+        if name == "full" and full_result is not None:
+            results[name] = full_result
+            continue
         masked = apply_ablation(signal_features, name)
         results[name] = run_arm(d0, config, arm_label, signal_features=masked)
     return results

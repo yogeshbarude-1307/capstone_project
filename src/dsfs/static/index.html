@@ -354,11 +354,14 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;
       <span id="status-text">Loading…</span>
     </div>
     <div class="spacer"></div>
+    <select id="run-selector" aria-label="Completed pipeline run" onchange="selectRun(this.value)"></select>
     <button id="btn-run" onclick="runPipeline()">
       <span class="run-spinner" id="run-spinner"></span>
       ▶ Run Pipeline
     </button>
   </div>
+
+    <div id="freshness-summary" role="status" style="padding:8px 24px;color:#51436b"></div>
 
   <!-- Content -->
   <div id="content">
@@ -417,7 +420,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;
     <div class="view" id="view-forecast">
       <div class="page-tag">Forecast Results</div>
       <div class="page-title">4-Arm Experiment</div>
-      <div class="page-sub">Does adding demand signals improve the forecast? Oracle (B) is the upper bound; extracted (C) is the real pipeline result.</div>
+      <div class="page-sub">Does adding demand signals improve the forecast? Oracle (B) uses generator interpretations; extracted (C) uses the HTTP feature service.</div>
       <div id="decision-banner" class="decision-banner neutral" style="margin-top:20px">
         <div class="db-title" id="db-title">Loading forecast results…</div>
         <div id="db-body"></div>
@@ -429,13 +432,14 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;
         <div class="arm-card"><div class="skeleton" style="height:120px"></div></div>
         <div class="arm-card"><div class="skeleton" style="height:120px"></div></div>
       </div>
+      <div id="forecast-segments" class="section-wrap"></div>
       <div class="chart-wrap">
         <div class="chart-title">MAE by Forecast Arm (lower = better baseline comparison)</div>
         <svg id="mae-chart" width="100%" height="140"></svg>
       </div>
       <div class="section-wrap">
         <div class="section-title" style="font-size:15px;margin-bottom:10px">Ablation Matrix</div>
-        <p style="font-size:13px;color:var(--t2);margin-bottom:12px">See <code>reports/forecast/forecast_ablation_results.md</code> for the full matrix. Summary: direction/magnitude features are statistically indistinguishable from no effect; effective_time features concentrate the loss.</p>
+        <p style="font-size:13px;color:var(--t2);margin-bottom:12px">See <code>reports/runs/&lt;run-id&gt;/reports/forecast/forecast_ablation_results.md</code> for the full matrix. The frozen study evaluates the full matrix on ten accounts per seed. Use the selected run directory for its evidence; uncomputed matrices remain unavailable.</p>
       </div>
     </div>
 
@@ -481,7 +485,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;
         </div>
         <div class="lc-field">
           <span class="lc-label">Forecast Cutoff (ISO datetime)</span>
-          <input type="text" id="lin-cutoff" value="2024-06-01T00:00:00" placeholder="YYYY-MM-DDTHH:MM:SS">
+          <input type="text" id="lin-cutoff" value="2024-06-03T00:00:00Z" placeholder="YYYY-MM-DDTHH:MM:SS">
         </div>
         <button id="btn-trace" onclick="traceLineage()">Trace ↗</button>
       </div>
@@ -537,15 +541,30 @@ function toast(msg,dur=3000){
 }
 
 // ── Status bar ──────────────────────────────────────────────────
+let selectedRun='';
+function apiURL(path){return path+(path.includes('?')?'&':'?')+'run_id='+encodeURIComponent(selectedRun);}
+async function loadRuns(preferred=''){
+  const response=await fetch('/api/runs');const runs=await response.json();
+  const selector=document.getElementById('run-selector');selector.replaceChildren();
+  for(const run of runs){const option=document.createElement('option');option.value=run.run_id;option.textContent=run.run_id;selector.appendChild(option);}
+  selectedRun=runs.some(r=>r.run_id===preferred)?preferred:(runs[0]?.run_id||'');
+  selector.value=selectedRun;
+}
+async function selectRun(run){
+  selectedRun=run;closePanel();
+  await Promise.all([loadStatus(),loadSignals(),loadForecast(),loadExtraction(),loadDrift(),loadLineageEntities()]);
+}
 async function loadStatus(){
   try{
-    const r=await fetch('/api/status');
+    const r=await fetch(apiURL('/api/status'));
     const d=await r.json();
     const pill=document.getElementById('status-pill');
     const txt=document.getElementById('status-text');
     if(d.ready){
       pill.classList.remove('no-data');
       txt.textContent=`${d.run_id} · ${d.n_notes} notes · ${d.n_entities} entities`;
+      const fresh=d.freshness||{};
+      document.getElementById('freshness-summary').textContent=`Publication target: ${fresh.target_minutes??60} simulated minutes · P95: ${fmtNum(fresh.p95_minutes)} min · Breaches: ${fresh.breach_count??'—'} · Delayed-batch demonstration: ${fresh.delayed_batch_demonstration?.breach_count??'—'} breach(s)`;
     } else {
       txt.textContent='No run data — click Run Pipeline';
     }
@@ -553,6 +572,7 @@ async function loadStatus(){
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmt(s){ return s?s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'—'; }
 function fmtDate(s){ return s?s.slice(0,10):'—'; }
 function fmtNum(n,d=2){ return (typeof n==='number')?n.toFixed(d):'—'; }
@@ -587,7 +607,7 @@ function certaintyChip(c){
 // ── Signal Intelligence ──────────────────────────────────────────
 async function loadSignals(){
   try{
-    const r=await fetch('/api/signals');
+    const r=await fetch(apiURL('/api/signals'));
     _signals=await r.json();
     buildFilterOptions();
     filterSignals();
@@ -612,7 +632,7 @@ function buildKPIs(){
   const rev=_signals.filter(s=>s.validation_status==='REVIEW').length;
   const kpi=document.getElementById('kpi-bar');
   kpi.innerHTML=`
-    <div class="kpi-card"><div class="kpi-label">Total Signals</div><div class="kpi-value">${total}</div><div class="kpi-sub">all extraction runs</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Signals</div><div class="kpi-value">${total}</div><div class="kpi-sub">selected completed run</div></div>
     <div class="kpi-card"><div class="kpi-label">Demand Channel</div><div class="kpi-value">${demand}</div><div class="kpi-sub">impact_channel = DEMAND</div></div>
     <div class="kpi-card green"><div class="kpi-label">Increase</div><div class="kpi-value">${inc}</div><div class="kpi-sub">ACTIVE signals</div></div>
     <div class="kpi-card red"><div class="kpi-label">Decrease</div><div class="kpi-value">${dec}</div><div class="kpi-sub">ACTIVE signals</div></div>
@@ -750,31 +770,23 @@ function closePanel(){
 // ── Forecast ────────────────────────────────────────────────────
 async function loadForecast(){
   try{
-    const r=await fetch('/api/forecast');
+    const r=await fetch(apiURL('/api/forecast'));
     const d=await r.json();
     if(d.error){ document.getElementById('arm-cards').innerHTML='<div class="empty-state">'+d.error+'</div>'; return; }
 
     const arms={
       A:{name:'Tabular Baseline',desc:'Lag+seasonal features only',cls:''},
-      B:{name:'Oracle (Upper Bound)',desc:'Ground-truth signal features',cls:'best'},
+      B:{name:'Oracle Interpretation',desc:'Ground-truth signal features',cls:'best'},
       C:{name:'Extracted Signals',desc:'Real pipeline features',cls:'blue'},
-      D:{name:'Shuffled Control',desc:'Entity/time alignment broken',cls:'orange'},
+      D:{name:'Shuffled Control',desc:'Account alignment broken at the same cutoff',cls:'orange'},
     };
-    const bLift=(d.B?.lift_vs_a||0)*100;
-    const cLift=(d.C?.lift_vs_a||0)*100;
-
-    // Decision banner
-    let bannerCls='neutral', dbTitle='', dbBody='';
-    if(bLift>3){
-      bannerCls='good';
-      dbTitle=`✓ Oracle signal adds forecast value — B beats A by ${bLift.toFixed(1)}%`;
-      dbBody=cLift>2?`Extracted arm (C) also improves by ${cLift.toFixed(1)}% — extraction is effective.`:
-        `Extracted arm (C) improvement (${cLift.toFixed(1)}%) is smaller than oracle — extraction may be the bottleneck.`;
-    } else {
-      bannerCls='neutral';
-      dbTitle=`B ≈ A — Oracle arm did not beat the tabular baseline (+${bLift.toFixed(1)}%)`;
-      dbBody='Per the docs/08 decision logic: rethink the hypothesis or the feature/model design before iterating on the extractor. The bottleneck is upstream of extraction.';
-    }
+    const oracle=d.uncertainty?.B;
+    const positive=oracle?.ci_low>0;
+    let bannerCls=positive?'good':'neutral';
+    const dbTitle=positive?'Oracle MASE improvement passes the paired uncertainty gate':'Positive oracle value is unconfirmed in this run';
+    const dbBody=oracle?.point!=null?
+      `Oracle MASE lift: ${(oracle.point*100).toFixed(2)}%; 95% account-trajectory CI [${(oracle.ci_low*100).toFixed(2)}%, ${(oracle.ci_high*100).toFixed(2)}%]. ${positive?'Assess how much extracted features retain.':'Revisit representation before expanding extraction technology.'}`:
+      'Paired MASE uncertainty is unavailable. No positive-value claim can be made.';
     const banner=document.getElementById('decision-banner');
     banner.className=`decision-banner ${bannerCls}`;
     document.getElementById('db-title').textContent=dbTitle;
@@ -787,17 +799,21 @@ async function loadForecast(){
       const m=d[k]||{};
       const lift=m.lift_vs_a!=null?(m.lift_vs_a*100):null;
       const liftHtml=lift!=null?
-        `<div class="arm-lift ${lift>0?'pos':lift<-1?'neg':'neu'}">${lift>0?'+':''}${lift.toFixed(1)}% vs A</div>`:'';
+        `<div class="arm-lift ${lift>0?'pos':lift<-1?'neg':'neu'}">${lift>0?'+':''}${lift.toFixed(1)}% MAE lift vs A</div>`:'';
       return `<div class="arm-card ${info.cls}">
         <div class="arm-label">Arm ${k}</div>
         <div class="arm-name">${info.name}</div>
         <div class="arm-metric"><div class="arm-metric-label">MAE</div><div class="arm-metric-val">${fmtNum(m.mae)}</div></div>
         <div class="arm-metric"><div class="arm-metric-label">MASE</div><div class="arm-metric-val">${fmtNum(m.mase)}</div></div>
         ${liftHtml}
+        <div style="font-size:11px;color:var(--t3)">Bias ${fmtNum(m.bias)}; ${m.n_origins??0} forecasts; MASE unavailable ${m.mase_unavailable_count??0}</div>
+        <div style="font-size:11px;color:var(--t3)">${d.uncertainty?.[k]?.point!=null?`MASE lift ${(d.uncertainty[k].point*100).toFixed(2)}% [${(d.uncertainty[k].ci_low*100).toFixed(2)}%, ${(d.uncertainty[k].ci_high*100).toFixed(2)}%]`:k==='D'&&!d.D?'Unavailable: single account':''}</div>
         <div style="font-size:11px;color:var(--t3);margin-top:6px">${info.desc}</div>
       </div>`;
     }).join('');
 
+    const segments=Object.entries(d.segments||{}).flatMap(([arm,groups])=>Object.entries(groups).map(([segment,m])=>`<tr><td>${arm}</td><td>${fmt(segment)}</td><td>${fmtNum(m.mae)}</td><td>${fmtNum(m.mase)}</td><td>${fmtNum(m.bias)}</td><td>${m.n_origins??0}</td></tr>`));
+    document.getElementById('forecast-segments').innerHTML=segments.length?`<div class="section-title">Horizon and signal exposure</div><table class="data-table"><thead><tr><th>Arm</th><th>Segment</th><th>MAE</th><th>MASE</th><th>Bias</th><th>Forecasts</th></tr></thead><tbody>${segments.join('')}</tbody></table>`:'';
     // SVG bar chart
     const entries=[['A',d.A?.mae,0],['B',d.B?.mae,1],['C',d.C?.mae,2],['D',d.D?.mae,3]];
     const maxMAE=Math.max(...entries.map(e=>e[1]||0))*1.1;
@@ -819,28 +835,29 @@ async function loadForecast(){
 // ── Extraction ──────────────────────────────────────────────────
 async function loadExtraction(){
   try{
-    const r=await fetch('/api/extraction');
+    const r=await fetch(apiURL('/api/extraction'));
     const d=await r.json();
     if(d.error){ document.getElementById('ext-table-wrap').innerHTML='<div class="empty-state">'+d.error+'</div>'; return; }
 
     // Stats
     document.getElementById('ext-stats').innerHTML=`
+      <div class="stat-card"><div class="big green">${d.accepted+d.quarantined>0?(100*d.accepted/(d.accepted+d.quarantined)).toFixed(2)+'%':'Unavailable'}</div><div class="lbl">Schema Conformance</div></div>
       <div class="stat-card"><div class="big green">${d.accepted||'—'}</div><div class="lbl">Accepted Signals</div></div>
       <div class="stat-card"><div class="big ${(d.quarantined||0)>0?'':'green'}">${d.quarantined||0}</div><div class="lbl">Quarantined</div></div>
       <div class="stat-card"><div class="big">${d.n_notes||'—'}</div><div class="lbl">Eval Dataset Size</div></div>`;
 
     // Metrics table
-    const metrics=d.metrics||{};
+    const metrics=d.metrics?.fields||{};
     const rows=Object.entries(metrics).map(([name,v])=>{
       if(typeof v!=='object') return '';
-      const f1=v.f1!=null?v.f1:null;
+      const f1=typeof v.f1==='object'?v.f1?.value:v.f1??null;
       const cls=f1==null?'':f1>=0.8?'f1-high':f1>=0.5?'f1-mid':'f1-low';
       return `<tr>
         <td>${fmt(name)}</td>
-        <td>${v.precision!=null?v.precision.toFixed(3):'—'}</td>
-        <td>${v.recall!=null?v.recall.toFixed(3):'—'}</td>
+        <td>${v.precision?.value!=null?v.precision.value.toFixed(3):'—'}</td>
+        <td>${v.recall?.value!=null?v.recall.value.toFixed(3):'—'}</td>
         <td class="${cls}">${f1!=null?f1.toFixed(3):'—'}</td>
-        <td>${v.support!=null?v.support:'—'}</td>
+        <td>${v.accuracy?.denominator!=null?v.accuracy.denominator:'—'}</td>
       </tr>`;
     }).join('');
 
@@ -855,6 +872,7 @@ async function loadExtraction(){
     const lims=d.limitations||[];
     cavDiv.innerHTML=`<div class="caveat-box">
       <strong>⚠ Important limitations</strong>
+      ${d.independent_review?.status==='reviewed'?`<p>Independent human single review: 35 natural-prevalence and 15 challenge notes, reported separately.</p><pre>${esc(JSON.stringify(d.independent_review.views,null,2))}</pre>`:`<p>Independent review: ${esc(d.independent_review?.status||'not prepared for this run')}. Semantic accuracy remains unavailable.</p>`}
       ${d.provisional?'<p>These are <strong>provisional self-scored labels</strong>, not independently human-adjudicated gold.</p>':''}
       <ul class="limitations">${lims.map(l=>`<li>${l}</li>`).join('')}</ul>
     </div>`;
@@ -864,7 +882,7 @@ async function loadExtraction(){
 // ── Drift ────────────────────────────────────────────────────────
 async function loadDrift(){
   try{
-    const r=await fetch('/api/drift');
+    const r=await fetch(apiURL('/api/drift'));
     const d=await r.json();
     const container=document.getElementById('drift-cards');
     if(d.error||d.skipped){
@@ -884,7 +902,9 @@ async function loadDrift(){
         <div class="drift-name">${d.scenario||'Unknown scenario'}</div>
         <div class="drift-meta">Monitor: <strong>${d.monitor_layer||'—'} / ${d.monitor_metric||'—'}</strong></div>
         <div class="drift-meta">Detection latency: <strong>${latency!=null?latency+' weeks after injection':'N/A (not detected)'}</strong></div>
-        <div class="drift-meta">Calibrated false-alert rate: <strong>${far!=null&&!isNaN(far)?(far*100).toFixed(1)+'%':'N/A'}</strong></div>
+        <div class="drift-meta">Warning lead time: <strong>${d.lead_time_weeks!=null?d.lead_time_weeks+' weeks':'Unavailable'}</strong></div>
+        <div class="drift-meta">Forecast degradation confirmed: <strong>${d.degradation_week!=null?'week '+d.degradation_week:'Not observed'}</strong></div>
+        <div class="drift-meta">Calibrated false-alert rate: <strong>${far!=null&&!isNaN(far)?(far*100).toFixed(1)+'% ('+(d.n_no_drift_runs??'unknown')+' no-drift runs)':'N/A'}</strong></div>
       </div>
       <div class="drift-card not-impl">
         <div class="drift-badge na">NOT IMPLEMENTED</div>
@@ -901,7 +921,7 @@ async function loadDrift(){
 
 // ── Lineage ──────────────────────────────────────────────────────
 async function loadLineageEntities(){
-  const r=await fetch('/api/lineage');
+  const r=await fetch(apiURL('/api/lineage'));
   const d=await r.json();
   const sel=document.getElementById('lin-entity');
   sel.innerHTML='<option value="">Select entity…</option>';
@@ -909,6 +929,7 @@ async function loadLineageEntities(){
     const o=document.createElement('option'); o.value=o.textContent=e; sel.appendChild(o);
   });
   if(d.entities?.length) sel.value=d.entities[0];
+  if(d.cutoffs?.length) document.getElementById('lin-cutoff').value=d.cutoffs[Math.floor(d.cutoffs.length*.75)];
 }
 
 async function traceLineage(){
@@ -917,7 +938,7 @@ async function traceLineage(){
   const res=document.getElementById('lineage-result');
   res.innerHTML='<div class="skeleton" style="height:60px;border-radius:8px"></div>';
 
-  const r=await fetch(`/api/lineage?entity=${encodeURIComponent(entity)}&cutoff=${encodeURIComponent(cutoff)}`);
+  const r=await fetch(apiURL(`/api/lineage?entity=${encodeURIComponent(entity)}&cutoff=${encodeURIComponent(cutoff)}`));
   const d=await r.json();
 
   if(d.error||d.message){
@@ -980,6 +1001,7 @@ async function runPipeline(){
     const d=await r.json();
     if(d.ok){
       toast('✓ Pipeline complete — refreshing data');
+      await loadRuns(d.run_id);
       await loadStatus();
       await loadSignals();
     } else { toast('Pipeline error: '+(d.error||'unknown')); }
@@ -990,6 +1012,7 @@ async function runPipeline(){
 
 // ── Init ─────────────────────────────────────────────────────────
 (async()=>{
+  await loadRuns();
   await loadStatus();
   await loadSignals();
 })();

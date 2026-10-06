@@ -29,7 +29,8 @@
   "properties": {
     "signal_id": { "type": "string" },
     "logical_signal_id": { "type": "string", "description": "Stable across revisions/re-extractions." },
-    "schema_version": { "type": "string", "const": "0.1.0" },
+    "business_event_ref": { "type": ["string", "null"], "description": "Explicit plan reference stated in source text; never inferred from generator truth." },
+    "schema_version": { "type": "string", "enum": ["0.1.0", "0.2.0"] },
 
     "source_id": { "type": "string" },
     "source_revision": { "type": "string" },

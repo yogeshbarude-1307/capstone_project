@@ -28,6 +28,7 @@ SCHEMA_FILES: dict[str, str] = {
     "source_evidence": "source_evidence.schema.json",
     "signal_record": "signal_record.schema.json",
     "forecast_feature": "forecast_feature.schema.json",
+    "demand_feature": "demand_feature.schema.json",
 }
 
 

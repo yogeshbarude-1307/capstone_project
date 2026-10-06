@@ -78,7 +78,7 @@ def _intersects_horizon(
 def _is_actionable(signal: SignalRecord) -> bool:
     return (
         signal.record_status == RecordStatus.ACTIVE
-        and signal.validation_status in (ValidationStatus.PASS, ValidationStatus.REVIEW)
+        and signal.validation_status == ValidationStatus.PASS
         and signal.signal_type != SignalType.NO_SIGNAL
     )
 

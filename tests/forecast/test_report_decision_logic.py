@@ -20,8 +20,9 @@ def test_d_lift_warning_does_not_suppress_bc_findings():
         "D": _m("D", 90.0, lift=0.10),   # D lift > 0.02 → leakage warning
     }
     report = _format_report(results, ForecastConfig())
-    assert "LEAKAGE WARNING" in report
-    assert "retains" in report or "bottleneck" in report or "no forecastable" in report
+    assert "shuffled control also improves" in report
+    assert "Both oracle and extracted MAE improve" in report
+    assert "Point estimates alone do not establish forecast value" in report
 
 
 def test_b_flat_reports_no_signal_branch():
@@ -32,7 +33,7 @@ def test_b_flat_reports_no_signal_branch():
         "D": _m("D", 100.0, lift=0.0),
     }
     report = _format_report(results, ForecastConfig())
-    assert "no forecastable" in report or "B ≈ A" in report
+    assert "Oracle MAE does not improve" in report
 
 
 def test_c_lags_b_reports_bottleneck_branch():
@@ -43,7 +44,8 @@ def test_c_lags_b_reports_bottleneck_branch():
         "D": _m("D", 100.0, lift=0.0),
     }
     report = _format_report(results, ForecastConfig())
-    assert "bottleneck" in report or "B > A but C" in report
+    assert "Both oracle and extracted MAE improve" in report
+    assert "paired uncertainty" in report
 
 
 def test_mandatory_caveat_present_verbatim():

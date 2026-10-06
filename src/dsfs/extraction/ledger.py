@@ -67,13 +67,17 @@ def ledger_as_of(
         if record.extraction_run_id != extraction_run_id:
             continue
         source = sources[record.source_id]  # missing lineage fails rather than guessing
-        if source.source_revision != record.source_revision:
-            raise ValueError("Source revision does not match ledger lineage")
         if source.available_at <= cutoff:
+            if source.source_revision != record.source_revision:
+                raise ValueError("Source revision does not match ledger lineage")
             visible.append(record)
     superseded = {
         r.supersedes_signal_id for r in visible
         if r.validation_status == ValidationStatus.PASS and r.supersedes_signal_id
     }
+    cancelled_refs = {r.business_event_ref for r in visible
+                      if r.validation_status == ValidationStatus.PASS and r.supersedes_signal_id and r.business_event_ref}
+    superseded.update(r.signal_id for r in visible if r.business_event_ref in cancelled_refs
+                      and not r.supersedes_signal_id)
     return [r.model_copy(update={"record_status": RecordStatus.SUPERSEDED})
             if r.signal_id in superseded else r.model_copy(deep=True) for r in visible]

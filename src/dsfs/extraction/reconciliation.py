@@ -37,7 +37,11 @@ def reconcile_reversal(
         and p.forecast_key == record.forecast_key
         and (record.signal_type == SignalType.OTHER_RELEVANT or p.signal_type == record.signal_type)
         and (p.effective_end is None or p.effective_end > evidence.authored_at)
+        and (record.business_event_ref is None or p.business_event_ref == record.business_event_ref)
     )]
+    if record.business_event_ref and candidates:
+        # Repeated notes for the same explicitly referenced event form one claim.
+        candidates = [max(candidates, key=lambda p: (sources[p.source_id].available_at, p.signal_id))]
     if len(candidates) != 1:
         return record
     target = candidates[0]

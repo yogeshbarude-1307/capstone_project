@@ -177,6 +177,15 @@ def generate_notes(
                 template_id = "standard"
                 negated = False
 
+            text += f" Plan reference {k.event_id}."
+            if use_negation and k.condition_text:
+                text += f" {k.condition_text}."
+            if config.explicit_dates:
+                # Exact interval replaces the approximate template phrase.
+                phrase = templates.time_phrase(authored_at, k.effective_start)
+                text = text.replace(phrase, "during the stated period")
+                text += f" Effective from {k.effective_start.date()} until {k.effective_end.date()}."
+
             if drift.is_past_injection(authored_at.date(), config.start_date, config.drift_inject_at_week):
                 text = drift.apply_text_mutation(text, config.drift_scenario)
                 chosen_source_type = drift.choose_source_type(rng, _SOURCE_TYPES, config.drift_scenario)
@@ -220,17 +229,13 @@ def generate_notes(
                 )
             )
 
-        reversal_probability = config.reversal_probability
-        if drift.is_past_injection(k.effective_start.date(), config.start_date, config.drift_inject_at_week):
-            reversal_probability = drift.effective_reversal_probability(
-                config.reversal_probability, config.drift_scenario,
-            )
-        if rng.random() < reversal_probability:
-            reversal_authored_at = k.effective_start + timedelta(days=rng.randint(1, 21))
+        if k.cancellation_at is not None:
+            reversal_authored_at = k.cancellation_at
             reversal_available_at = _sample_available_at(reversal_authored_at, config, rng)
             reversal_text = templates.render_reversal_note(
                 original_signal_type=k.signal_type, authored_at=reversal_authored_at, rng=rng
             )
+            reversal_text += f" Plan reference {k.event_id}. Effective from {k.cancellation_at.date()} until {k.effective_end.date()}."
             if drift.is_past_injection(reversal_authored_at.date(), config.start_date, config.drift_inject_at_week):
                 reversal_text = drift.apply_text_mutation(reversal_text, config.drift_scenario)
                 reversal_source_type = drift.choose_source_type(rng, _SOURCE_TYPES, config.drift_scenario)

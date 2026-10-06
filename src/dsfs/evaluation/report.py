@@ -19,8 +19,8 @@ from dsfs.extraction.pipeline import run_extraction
 
 EVALUATOR_VERSION = "extraction-eval-0.1.0"
 POC_CAVEAT = (
-    "This POC demonstrates that a deliberately planted, causally-consistent early signal can be recovered "
-    "from synthetic notes and shown to add measurable value to a forecast under controlled conditions. "
+    "This synthetic POC evaluates whether early qualitative signals improve forecasts. "
+    "Positive forecast value is established only when the reported comparison supports it. "
     "It does **not** demonstrate that real company account/service/supplier notes contain comparable "
     "predictive information, at what prevalence, or with what real lead time. Real-data validation is "
     "a required, separate, subsequent gate before any production claim is made."
@@ -57,6 +57,10 @@ def run_evaluation(
     if split not in ("dev", "test"):
         raise ValueError("Evaluation split must be dev or test")
     selected = [case for case in dataset.cases if case.split == split]
+    if any(c.label_origin == "human" and "REVIEWER_TODO" in json.dumps(c.model_dump(mode="json")) for c in selected):
+        raise ValueError("Independent review contains unfinished REVIEWER_TODO placeholders")
+    if any(c.label_origin == "human" and not c.scored_fields for c in selected):
+        raise ValueError("Human review must declare nonempty scored_fields")
     if not selected:
         raise ValueError(f"No D2 cases in split {split!r}")
     statuses = Counter(label_status(c) for c in selected)
@@ -74,7 +78,8 @@ def run_evaluation(
         scenarios[case.scenario_id].append(case.evidence)
     predictions, quarantined = [], []
     for scenario_id in sorted(scenarios):
-        result = run_extraction(scenarios[scenario_id], set(dataset.known_entities),
+        context = dataset.scenario_context.get(scenario_id, [])
+        result = run_extraction(context + scenarios[scenario_id], set(dataset.known_entities),
                                 extraction_run_id=run_id, extracted_at=extracted_at)
         predictions.extend(result.accepted)
         quarantined.extend(result.quarantined)
@@ -82,6 +87,9 @@ def run_evaluation(
     for case in selected:
         cohorts[(case.sample, label_status(case))].append(case)
     source_by_signal = {p.signal_id: p.source_id for p in predictions}
+    scored_ids = {c.evidence.source_id for c in selected}
+    predictions = [p for p in predictions if p.source_id in scored_ids]
+    quarantined = [q for q in quarantined if q.source_id in scored_ids]
     views = []
     for (sample, status), cases in sorted(cohorts.items()):
         ids = {c.evidence.source_id for c in cases}
@@ -97,9 +105,10 @@ def run_evaluation(
         "clock": "simulated: latest selected source availability + 1 second",
         "extractor_version": DEFAULT_EXTRACTOR_VERSION,
         "extraction_config_version": DEFAULT_EXTRACTION_CONFIG_VERSION,
-        "signal_schema_version": "0.1.0", "annotation_schema_version": dataset.schema_version,
+        "signal_schema_version": "0.2.0", "annotation_schema_version": dataset.schema_version,
         "metric_config": asdict(config), "python_version": platform.python_version(),
         "dependency_versions": {name: version(name) for name in ("pydantic", "jsonschema", "pandas")},
+        "reviewer_ids": sorted({i for c in selected if c.label_origin == "human" for i in c.annotator_ids}),
         "split": split, "n_notes": len(selected), "annotation_status": dict(statuses),
         "proposed_minimum_d2_size": 800, "below_proposed_size": len(selected) < 800,
         "provisional": bool(statuses["provisional"]), "gold_mode": require_gold,

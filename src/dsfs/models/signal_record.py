@@ -86,7 +86,8 @@ class EvidenceRef(ContractModel):
 class SignalRecord(ContractModel):
     signal_id: str
     logical_signal_id: str
-    schema_version: Literal["0.1.0"] = "0.1.0"
+    business_event_ref: str | None = None
+    schema_version: Literal["0.1.0", "0.2.0"] = "0.2.0"
     source_id: str
     source_revision: str
     signal_type: SignalType

@@ -17,6 +17,7 @@ def _origin(entity="CUST-0001", origin_week=10, horizon_week=12, cutoff="2023-03
         predicted=95.0,
         arm=arm,
         origin_cutoff=pd.Timestamp(cutoff),
+        horizon_step=horizon_week-origin_week,
     )
 
 

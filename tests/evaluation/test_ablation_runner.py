@@ -57,9 +57,10 @@ def test_note_count_only_masks_everything_but_count():
     signal_features = _make_signal_features(d0)
     masked = apply_ablation(signal_features, "note_count_only")
     assert masked["signal_count_30d"].notna().all()
-    assert masked["expected_qty_delta_next_horizon"].isna().all()
-    assert masked["net_demand_direction_30d"].isna().all()
-    assert masked["has_active_signal_30d"].isna().all()
+    assert "expected_qty_delta_next_horizon" not in masked
+    assert "net_demand_direction_30d" not in masked
+    assert "has_active_signal_30d" not in masked
+    assert "independent_source_count_30d" not in masked
 
 
 def test_full_ablation_is_unmasked():
@@ -94,7 +95,7 @@ def test_run_ablation_matrix_produces_every_implemented_row():
 
 
 def test_not_implemented_ablations_are_documented_not_fabricated():
-    assert "business_certainty_conditionality" in NOT_IMPLEMENTED
+    assert "business_certainty_conditionality" in ABLATIONS
     assert "aggregate_only_no_entity_resolution" in NOT_IMPLEMENTED
     assert "rules_vs_hybrid_vs_llm" in NOT_IMPLEMENTED
     assert "decay_vs_windowed" in NOT_IMPLEMENTED

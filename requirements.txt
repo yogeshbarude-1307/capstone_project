@@ -1,4 +1,3 @@
-# Installs this source checkout and the dependencies needed for milestones 1-3.
-# Optional later-stage dependencies are named extras in pyproject.toml.
+# Installs this checkout with runtime, test and localhost server dependencies.
 # See requirements-tested.txt for the exact tested Windows/Python 3.14 snapshot.
--e .[dev]
+-e .[dev,server]
